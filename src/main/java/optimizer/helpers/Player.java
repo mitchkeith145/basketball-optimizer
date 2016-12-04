@@ -2,7 +2,7 @@ package optimizer.helpers;
 
 import javafx.geometry.Pos;
 import org.apache.commons.csv.CSVRecord;
-
+import org.json.*;
 /**
  * Created by mitch on 11/23/16.
  */
@@ -25,9 +25,26 @@ public class Player {
         Show();
     }
 
+    public Player(String json) throws JSONException {
+        JSONObject jsonObj = new JSONObject(json);
+        Name = jsonObj.get("name").toString();
+        Position = jsonObj.get("position").toString();
+        Ratio = Double.parseDouble(jsonObj.get("ratio").toString());
+        Salary = Integer.parseInt(jsonObj.get("salary").toString());
+        PredictedMinutes = Integer.parseInt(jsonObj.get("min").toString());
+        expectedPoints = Double.parseDouble(jsonObj.get("pts").toString());
+        Rank = Integer.parseInt(jsonObj.get("rank").toString());
+        ValueRatio = Double.parseDouble(jsonObj.get("value_ratio").toString());
+        Show();
+    }
+
     public String Show() {
-        System.out.println("\t" + Name + " (" + Position + ", Ratio=" + String.format("%.2f", Ratio)
-                + ", Salary=" + Salary + ", Pts=" + String.format("%.2f", expectedPoints) + ", Min=" + PredictedMinutes + ")");
+        String json = "{'name':'" + Name + "'," + "'position':'" + Position + "'," +
+                "'ratio':'" + String.format("%.5f", Ratio) + "'," + "'salary':'" + Salary + "'," +
+                "'pts':'" + String.format("%.5f", expectedPoints) + "'," + "'min':'" + PredictedMinutes + "'," +  "}";
+
+        System.out.println("\t" + Name + " (" + Position + ", Ratio=" + String.format("%.5f", Ratio)
+                + ", Salary=" + Salary + ", Pts=" + String.format("%.5f", expectedPoints) + ", Min=" + PredictedMinutes + ")");
 
         String tableRow = "<tr>" + "<td>" + Name + "</td>" + "<td>" + Position + "</td>" +
                 "<td>" + Salary + "</td>" + "<td>" + expectedPoints + "</td>" +
@@ -35,6 +52,15 @@ public class Player {
                 "</tr>";
         return tableRow;
     }
+
+    public String toJson() {
+        return "{\"name\":\"" + Name + "\"," + "\"position\":\"" + Position + "\"," +
+                "\"ratio\":" + String.format("%.5f", Ratio) + "," + "\"salary\":" + Salary + "," +
+                "\"pts\":" + String.format("%.5f", expectedPoints) + "," + "\"min\":" + PredictedMinutes + "," +
+                "\"value_ratio\":" + ValueRatio + "," + "\"rank\":" + Rank + "" + "}";
+    }
+
+
 
     public String toString() {
         return Name;

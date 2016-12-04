@@ -35,7 +35,12 @@ public class Team {
 
     public Boolean HasPlayer(Player p)
     {
-        return Players.contains(p);
+        for (Player player : Players) {
+            if (player.Name.equals(p.Name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public double TotalExpectedPoints() {
@@ -72,7 +77,23 @@ public class Team {
         return table;
     }
 
+    public String toJson() {
+        String json = "{";
+        json += "\"expected_points\":" + totalExpectedPoints + ",";
+        json += "\"roster\":[";
+        int playerCount = 0;
+        for (Player p : Players) {
+            json += p.toJson();
+            if (playerCount < Players.size() - 1) {
+                json += ",";
+            }
+            playerCount++;
+        }
+        json += "]}";
+        return json;
+    }
+
     public Boolean isEquals(Team t) {
-        return t.TotalExpectedPoints() == TotalExpectedPoints();
+        return Math.abs(t.TotalExpectedPoints() - TotalExpectedPoints()) < 0.00001;
     }
 }

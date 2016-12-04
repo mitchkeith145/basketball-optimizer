@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <meta charset="UTF-8">
+        <title>Fantasy Basketball Optimizer</title>
+    </head>
+    <body ng-app="Optimizer" ng-controller="appController">
+        <div style="width:100%; height:100%" ng-hide="hideUpload">
+            <form name="form">
+                <div>Select the Monster CSV</div>
+                <div style="height: 2px; width: 10%;">&nbsp;</div>
+                <div style="width:10%;" ngf-select required ng-model="file" name="file" ngf-pattern="'*.csv'" ngf-accept="'*.csv'" ngf-max-size="20MB" ngf-min-height="100" ngf-resize="{width: 10%}">
+                    <button style="width: 100%;" class="btn btn-default">Select</button>
+                </div>
+                <div style="height: 2px; width: 10%;">&nbsp;</div>
+                <button style="width: 10%;" class="btn btn-default" ng-disabled="form.$invalid" type="submit" ng-click="submit()">Submit</button>
+            </form>
+        </div>
+
+        <div style="width:100%; height:100%" ng-hide="! hideUpload">
+            <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" href="#complete">Complete List</a></li>
+                <li><a ng-click="getPositionLists()" data-toggle="tab" href="#positions">Position Lists</a></li>
+                <li><a data-toggle="tab" href="#generate">Generate Teams</a></li>
+            </ul>
+
+            <div class="tab-content">
+                <div id="complete" class="tab-pane fade in active">
+                    <table class="table table-striped">
+                        <thead>
+                        <th>Name</th>
+                        <th>Position</th>
+                        <th>Salary</th>
+                        <th>Projected Points</th>
+                        <th>Ratio</th>
+                        <th>Value Ratio</th>
+                        <th>Minutes</th>
+                        <th>Rank</th>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="player in players">
+                            <td>{{ player.name }}</td>
+                            <td>{{ player.position }}</td>
+                            <td>{{ player.salary }}</td>
+                            <td>
+                                <div style="float: left; width: 50%;">{{ player.pts }}</div>
+                                <button style="float: left; width: 25%;" class="btn btn-default" ng-click="increaseProjectedPoints(player)">+1</button>
+                                <button style="float: left; width: 25%;" class="btn btn-default" ng-click="decreaseProjectedPoints(player)">-1</button>
+                            </td>
+                            <td>{{ player.ratio }}</td>
+                            <td>{{ player.value_ratio }}</td>
+                            <td>{{ player.min }}</td>
+                            <td>{{ player.rank }}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="positions" class="tab-pane fade">
+                    <select ng-model="selectedPosition" ng-change="onPositionSelected()">
+                        <option ng-repeat="p in positions">{{ p.name }}</option>
+                    </select>
+                    <table class="table table-striped">
+                        <thead>
+                        <th>Name</th>
+                        <th>Position</th>
+                        <th>Salary</th>
+                        <th>Projected Points</th>
+                        <th>Ratio</th>
+                        <th>Value Ratio</th>
+                        <th>Minutes</th>
+                        <th>Rank</th>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="player in selectedList">
+                            <td>{{ player.name }}</td>
+                            <td>{{ player.position }}</td>
+                            <td>{{ player.salary }}</td>
+                            <td>{{ player.pts }}</td>
+                            <td>{{ player.ratio }}</td>
+                            <td>{{ player.value_ratio }}</td>
+                            <td>{{ player.min }}</td>
+                            <td>{{ player.rank }}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="generate" class="tab-pane fade">
+                    <button class="btn btn-default"  ng-click="generateTeams()" style="float: left;">Generate</button>
+                    <button ng-show="canExport" style="float: left;" class="btn btn-default"  ng-csv="exportData" csv-header="['PG', 'SG', 'G', 'SF', 'PF', 'F', 'C', 'UTIL']" filename="teams.csv">Export</button>
+
+                    <form ng-show="bestTeams.length > 0" name="exportForm" style="float: right;">
+                        <div style="float: left;">Upload Draft Kings ID CSV</div>
+                        <div style="float: left;" ngf-select ng-model="exportFile" name="exportFile" ngf-pattern="'*.csv'"
+                             ngf-accept="'*.csv'" ngf-max-size="20MB" ngf-min-height="100">
+                            <button class="btn btn-default" >Select</button>
+                        </div>
+                        <button style="float: left;" class="btn btn-default" ng-disabled="! exportFile" type="submit" ng-click="exportTeams()">Submit</button>
+                    </form>
+
+                    <table class="table table-striped" ng-repeat="team in bestTeams">
+                        <thead>
+                            <tr>
+                                <th class="col-md-3">Name</th>
+                                <th class="col-md-1">Position</th>
+                                <th class="col-md-2">Salary</th>
+                                <th class="col-md-2">Expected Points</th>
+                                <th class="col-md-2">Ratio</th>
+                                <th class="col-md-2">Minutes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="player in team.roster">
+                                <td>{{ player.name }}</td>
+                                <td>{{ player.position }}</td>
+                                <td>{{ player.salary }}</td>
+                                <td>{{ player.pts }}</td>
+                                <td>{{ player.ratio }}</td>
+                                <td>{{ player.min }}</td>
+                            </tr>
+                            <tr>
+                                <td>Expected Points</td>
+                                <td>{{ team.expected_points | number : 4 }}</td>
+                                <td>Export: <input ng-show="gotMappings" type="checkbox" ng-model="team.export" ng-click="updateCsvData()"></td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script src="bower_components/angular/angular.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.9/angular-sanitize.js"></script>
+        <script src="bower_components/ng-file-upload/ng-file-upload.js"></script>
+        <script src="bower_components/angular-ui-select/dist/select.js"></script>
+        <script src="bower_components/ng-csv/build/ng-csv.min.js"></script>
+        <script src="js/app.js"></script>
+        <script src="js/controllers.js"></script>
+    </body>
+</html>
+

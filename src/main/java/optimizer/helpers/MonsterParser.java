@@ -13,7 +13,7 @@ import java.util.*;
  * Created by mitch on 11/23/16.
  */
 
-public class TeamOptimizer {
+public class MonsterParser {
     public static int MaxLevel = 8;
 
     int TopTierTeamCount = 20;
@@ -39,19 +39,11 @@ public class TeamOptimizer {
 
     List<List<Player>> PlayerLists = new ArrayList<>();
 
-    public TeamOptimizer(List<List<Player>> lists) {
-        PlayerLists = lists;
-        PG_List = lists.get(0);
-        SG_List = lists.get(1);
-        G_List = lists.get(2);
-        SF_List = lists.get(3);
-        PF_List = lists.get(4);
-        F_List = lists.get(5);
-        C_List = lists.get(6);
-        UTIL_List = lists.get(7);
+    public MonsterParser() {
+
     }
 
-    public TeamOptimizer(String spreadsheetPath) throws IOException
+    public MonsterParser(String spreadsheetPath) throws IOException
     {
         System.out.println("Spreadsheet locale");
         System.out.println(spreadsheetPath);
@@ -71,6 +63,7 @@ public class TeamOptimizer {
 
                 Player player = new Player(csvRecord);
 
+                // TODO: add next logic to its own function that takes a list of players.
                 if (player.Position.contains("/")) {
                     String pos1 = player.Position.split("/")[0];
                     String pos2 = player.Position.split("/")[1];
@@ -154,155 +147,68 @@ public class TeamOptimizer {
         PlayerLists.add(UTIL_List);
     }
 
-    private void RemoveFromPlayerLists(Player p)
-    {
-        for (List<Player> playerList : PlayerLists) {
-            if (playerList.contains(p)) {
-                playerList.remove(p);
+    public Map<String, String> parseIdCsv(String spreadsheetPath) {
+        System.out.println("parsing the id csv file...");
+        File csvData = new File(spreadsheetPath);
+        try {
+            CSVParser parser = CSVParser.parse(csvData,
+                    Charset.defaultCharset(),
+                    CSVFormat.RFC4180);
+            boolean header = true;
+            List<Player> completeList = new ArrayList<>();
+            int i = 0;
+            boolean recording = false;
+            Map<String, String> nameIdMapper = new HashMap<>();
+            for (CSVRecord csvRecord : parser.getRecords()) {
+                System.out.println("Record " + i + ":");
+                System.out.println(csvRecord.get(10) + "; " + csvRecord.get(11) + "; " + csvRecord.get(12) + "; " + csvRecord.get(13));
+                if ((csvRecord.get(11).length() > 0 && ! csvRecord.get(11).contains("Name")) &&
+                        (csvRecord.get(10).length() > 0 && ! csvRecord.get(10).contains("Name + ID"))) {
+                    nameIdMapper.put(csvRecord.get(11), csvRecord.get(10));
+                }
+                i++;
             }
+            return nameIdMapper;
+        }
+        catch (IOException e) {
+            System.out.println("Exception Found:");
+            System.out.println(e.getMessage());
+            System.out.println(e.getStackTrace());
+            return null;
         }
     }
 
-    public Player FindPlayer(String partialName)
-    {
-        for (Player p : this.UtilityList)
-        {
-            if (p.Name.indexOf(partialName) > -1)
-            {
-                return p;
+    public List<Player> parseCsv(String spreadsheetPath) {
+        File csvData = new File(spreadsheetPath);
+        try {
+            CSVParser parser = CSVParser.parse(csvData,
+                    Charset.defaultCharset(),
+                    CSVFormat.RFC4180.withHeader("", "Like", "Rank", "Price", "Ratio", "Value", "CompV1", "Name", "Inj",
+                            "Team", "Pos", "g", "Ease", "Rest", "RestA", "m/g", "Opp", "3", "r", "a", "s", "b", "2d",
+                            "3d", "to", "pV", "3V", "rV", "aV", "sV", "bV", "2dV", "3dV", "toV"));
+            boolean header = true;
+            List<Player> completeList = new ArrayList<>();
+
+            for (CSVRecord csvRecord : parser.getRecords()) {
+                if (header) {
+                    header = false;
+                    continue;
+                }
+
+                Player player = new Player(csvRecord);
+                completeList.add(player);
             }
+            return completeList;
         }
-        return null;
-    }
-
-    public List<Team> FindBestTeams(int cashLimit, int optionsPerPosition, int topTierCount)
-    {
-        System.out.println("finding best...");
-
-        List<Player> orderedPlayers = null;
-        List<List<Player>> newPlayerLists = new ArrayList<>();
-        TopTierTeamCount = topTierCount;
-
-        OptionsPerPosition = optionsPerPosition;
-        for (List<Player> playerList : PlayerLists)
-        {
-            //list.sort(Comparator.comparing(a -> a.attr));
-            if (playerList.size() < 150) {
-                playerList.sort(Comparator.comparing(p -> p.ValueRatio));
-                Collections.reverse(playerList);
-                orderedPlayers = playerList;
-            }
-            else {
-                playerList.sort(Comparator.comparing(p -> p.Ratio));
-                Collections.reverse(playerList);
-                orderedPlayers = playerList;
-            }
-            newPlayerLists.add(orderedPlayers);
-        }
-        PlayerLists = newPlayerLists;
-
-
-
-        System.out.println("starting recursion...");
-        ExploreTeamspace(0, cashLimit, new Team());
-        return this.TopTierTeams;
-    }
-
-    private void ExploreTeamspace(int level, int cashLimit, Team teamSoFar)
-    {
-        if (level == MaxLevel)
-        {
-            TryAddToTopTierTeams(teamSoFar);
-            return;
-        }
-
-        int options = this.OptionsPerPosition;
-        if (level == 2 || level == 5) options = OptionsPerPosition * 2;
-        if (level == 7) options = OptionsPerPosition * 4;
-
-        for (int i = 0; i < options; i++)
-        {
-            Player newPlayer = PlayerLists.get(level).get(i);
-            if (newPlayer.Salary > cashLimit) continue;
-            if (teamSoFar.HasPlayer(newPlayer)) continue;
-            ExploreTeamspace(level + 1, cashLimit - newPlayer.Salary, ExtendTeam(teamSoFar, newPlayer));
-        }
-    }
-    private Team ExtendTeam(Team teamSoFar, Player newPlayer)
-    {
-        Team extendedTeam = teamSoFar.Clone();
-        extendedTeam.Add(newPlayer);
-        return extendedTeam;
-    }
-
-    private void TryAddToTopTierTeams(Team team)
-    {
-        int index = 0;
-
-        for (Team topTierTeam : TopTierTeams) {
-            if (team.isEquals(topTierTeam))
-                return;
-
-            if (team.TotalExpectedPoints() > topTierTeam.TotalExpectedPoints()) {
-                TopTierTeams.add(index, team.Clone());
-                if (TopTierTeams.size() >= TopTierTeamCount)
-                    TopTierTeams.remove(TopTierTeams.size() - 1);
-                return;
-            }
-            index++;
-        }
-        if (TopTierTeams.size() < TopTierTeamCount) {
-            TopTierTeams.add(team.Clone());
+        catch (IOException e) {
+            System.out.println("Exception Found:");
+            System.out.println(e.getMessage());
+            System.out.println(e.getStackTrace());
+            return null;
         }
     }
 
-    private void TruncatePlayerList(int truncateSize, List<Player> playerList)
-    {
-        int originalPlayerCount = playerList.size();
-
-        for (int i=truncateSize; i<originalPlayerCount; i++)
-        {
-            playerList.remove(truncateSize);
-        }
-    }
-
-    private void RemoveSuperLowScorers(int minPoints, List<Player> playerList)
-    {
-        List<Player> playersToRemove = new ArrayList<>();
-        for (Player p : playerList)
-        {
-            if (p.expectedPoints < minPoints) {
-                playersToRemove.add(p);
-            }
-        }
-        for (Player p : playersToRemove) {
-            playerList.remove(p);
-        }
-    }
-    private void RemoveCheapPlayers(int minSalary, List<Player> playerList)
-    {
-        List<Player> playersToRemove = new ArrayList<>();
-        for (Player p : playerList)
-        {
-            if (p.Salary < minSalary) {
-                playersToRemove.add(p);
-            }
-        }
-        for (Player p : playersToRemove) {
-            playerList.remove(p);
-        }
-    }
-    private void RemovePlayersWithLowMinutes(int minMinutes, List<Player> playerList)
-    {
-        List<Player> playersToRemove = new ArrayList<>();
-        for (Player p : playerList)
-        {
-            if (p.PredictedMinutes < minMinutes) {
-                playersToRemove.add(p);
-            }
-        }
-        for (Player p : playersToRemove) {
-            playerList.remove(p);
-        }
+    public List<List<Player>> getLists() {
+        return PlayerLists;
     }
 }
