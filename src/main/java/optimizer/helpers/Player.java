@@ -11,7 +11,7 @@ public class Player {
     public Integer Salary, Rank, PredictedMinutes;
     public Double expectedPoints, Ratio, ValueRatio;
 
-    public Player(CSVRecord record) {
+    public Player(CSVRecord record) { // instantiate Player from CSV data
         Name = record.get("Name");
         Position = record.get("Pos");
         String sal = record.get("Price");
@@ -25,7 +25,7 @@ public class Player {
         Show();
     }
 
-    public Player(String json) throws JSONException {
+    public Player(String json) throws JSONException { // instantiate Player from JSON data
         JSONObject jsonObj = new JSONObject(json);
         Name = jsonObj.get("name").toString();
         Position = jsonObj.get("position").toString();

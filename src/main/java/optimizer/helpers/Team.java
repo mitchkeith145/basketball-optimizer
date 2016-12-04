@@ -78,6 +78,29 @@ public class Team {
     }
 
     public String toJson() {
+        /**
+         *
+         * Returns JSON of the form:
+         * {
+         *    "expected_points": XYZ.abc,
+         *    "roster": [ {
+         *        "name": "blah",
+         *        "pos": "blah",
+         *        ...
+         *        "pts": 42
+         *        },
+         *        "name": "blah",
+         *        "pos": "blah",
+         *        ...
+         *        "pts": 42
+         *        },
+         *        ...
+         *        ...
+         *        ...
+         *     ]
+         * }
+         *
+         */
         String json = "{";
         json += "\"expected_points\":" + totalExpectedPoints + ",";
         json += "\"roster\":[";

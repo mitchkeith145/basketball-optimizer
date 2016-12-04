@@ -5,6 +5,9 @@
         <meta charset="UTF-8">
         <title>Fantasy Basketball Optimizer</title>
     </head>
+
+    <!-- ng-app="Optimizer" is used to declare everything within the body tag belongs to the Optimizer angular app (app.js) -->
+    <!-- ng-app="Optimizer" is used to declare everything within the body tag belongs to the appController (controllers.js) -->
     <body ng-app="Optimizer" ng-controller="appController">
         <div style="width:100%; height:100%" ng-hide="hideUpload">
             <form name="form">
@@ -19,6 +22,7 @@
         </div>
 
         <div style="width:100%; height:100%" ng-hide="! hideUpload">
+            <!-- Navigation Tab Menu HTML -->
             <ul class="nav nav-tabs">
                 <li class="active"><a data-toggle="tab" href="#complete">Complete List</a></li>
                 <li><a ng-click="getPositionLists()" data-toggle="tab" href="#positions">Position Lists</a></li>
@@ -27,6 +31,7 @@
             </ul>
 
             <div class="tab-content">
+                <!-- Complete Player View Tab Content HTML -->
                 <div id="complete" class="tab-pane fade in active">
                     <table class="table table-striped">
                         <thead>
@@ -57,6 +62,8 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Position View Tab Content HTML -->
                 <div id="positions" class="tab-pane fade">
                     <select ng-model="selectedPosition" ng-change="onPositionSelected()">
                         <option ng-repeat="p in positions">{{ p.name }}</option>
@@ -86,6 +93,8 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Generate Teams Tab Content HTML -->
                 <div id="generate" class="tab-pane fade">
                     <button class="btn btn-default"  ng-click="generateTeams()" style="float: left;">Generate</button>
 
@@ -128,6 +137,8 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Export Tab Content HTML -->
                 <div id="export" class="tab-pane fade">
                     <button ng-show="canExport" style="float: left;" class="btn btn-default"  ng-csv="exportData" csv-header="['PG', 'SG', 'G', 'SF', 'PF', 'F', 'C', 'UTIL']" filename="teams.csv">Export</button>
                     <table class="table table-striped">
@@ -160,6 +171,7 @@
             </div>
         </div>
 
+        <!-- Declare Javascript File Dependencies and Where to Load them From -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
         <script src="bower_components/angular/angular.js"></script>
@@ -169,6 +181,7 @@
         <script src="bower_components/ng-csv/build/ng-csv.min.js"></script>
         <script src="js/app.js"></script>
         <script src="js/controllers.js"></script>
+        <!-- Declare Javascript File Dependencies and Where to Load them From -->
     </body>
 </html>
 
