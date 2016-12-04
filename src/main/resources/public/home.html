@@ -23,6 +23,7 @@
                 <li class="active"><a data-toggle="tab" href="#complete">Complete List</a></li>
                 <li><a ng-click="getPositionLists()" data-toggle="tab" href="#positions">Position Lists</a></li>
                 <li><a data-toggle="tab" href="#generate">Generate Teams</a></li>
+                <li ng-show="canExport"><a data-toggle="tab" href="#export">Export Teams</a></li>
             </ul>
 
             <div class="tab-content">
@@ -87,10 +88,9 @@
                 </div>
                 <div id="generate" class="tab-pane fade">
                     <button class="btn btn-default"  ng-click="generateTeams()" style="float: left;">Generate</button>
-                    <button ng-show="canExport" style="float: left;" class="btn btn-default"  ng-csv="exportData" csv-header="['PG', 'SG', 'G', 'SF', 'PF', 'F', 'C', 'UTIL']" filename="teams.csv">Export</button>
 
                     <form ng-show="bestTeams.length > 0" name="exportForm" style="float: right;">
-                        <div style="float: left;">Upload Draft Kings ID CSV</div>
+                        <div style="float: left; padding-right: 10px; padding-top: 7.5px;">Upload Draft Kings ID CSV</div>
                         <div style="float: left;" ngf-select ng-model="exportFile" name="exportFile" ngf-pattern="'*.csv'"
                              ngf-accept="'*.csv'" ngf-max-size="20MB" ngf-min-height="100">
                             <button class="btn btn-default" >Select</button>
@@ -126,6 +126,35 @@
                                 <td>&nbsp;</td>
                             </tr>
                         </tbody>
+                    </table>
+                </div>
+                <div id="export" class="tab-pane fade">
+                    <button ng-show="canExport" style="float: left;" class="btn btn-default"  ng-csv="exportData" csv-header="['PG', 'SG', 'G', 'SF', 'PF', 'F', 'C', 'UTIL']" filename="teams.csv">Export</button>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>PG</th>
+                                <th>SG</th>
+                                <th>G</th>
+                                <th>SF</th>
+                                <th>PF</th>
+                                <th>F</th>
+                                <th>C</th>
+                                <th>UTIl</th>
+                            </tr>
+                        <tbody>
+                            <tr ng-repeat="row in exportData">
+                                <td>{{ row.a }}</td>
+                                <td>{{ row.b }}</td>
+                                <td>{{ row.c }}</td>
+                                <td>{{ row.d }}</td>
+                                <td>{{ row.e }}</td>
+                                <td>{{ row.f }}</td>
+                                <td>{{ row.g }}</td>
+                                <td>{{ row.h }}</td>
+                            </tr>
+                        </tbody>
+                        </thead>
                     </table>
                 </div>
             </div>
