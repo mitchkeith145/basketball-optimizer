@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="width: 100%; height:100%;">
     <head>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
         <meta charset="UTF-8">
@@ -8,7 +8,7 @@
 
     <!-- ng-app="Optimizer" is used to declare everything within the body tag belongs to the Optimizer angular app (app.js) -->
     <!-- ng-app="Optimizer" is used to declare everything within the body tag belongs to the appController (controllers.js) -->
-    <body ng-app="Optimizer" ng-controller="appController">
+    <body ng-app="Optimizer" ng-controller="appController" style="width: 100%; height:100%;">
         <div style="width:100%; height:100%" ng-hide="hideUpload">
             <form name="form">
                 <div>Select the Monster CSV</div>
@@ -30,7 +30,7 @@
                 <li ng-show="canExport"><a data-toggle="tab" href="#export">Export Teams</a></li>
             </ul>
 
-            <div class="tab-content">
+            <div class="tab-content" style="width: 100%; height:100%;">
                 <!-- Complete Player View Tab Content HTML -->
                 <div id="complete" class="tab-pane fade in active">
                     <table class="table table-striped">
@@ -95,10 +95,18 @@
                 </div>
 
                 <!-- Generate Teams Tab Content HTML -->
-                <div id="generate" class="tab-pane fade">
+                <div id="generate" class="tab-pane fade" style="width: 100%; height:100%;">
+                    <div style="width: 100%; height: 7.5%; scroll-y: auto;">
                     <button class="btn btn-default"  ng-click="generateTeams()" style="float: left;">Generate</button>
 
                     <form ng-show="bestTeams.length > 0" name="exportForm" style="float: right;">
+                        <div ng-show="gotMappings" style="float: left; padding-right: 10px; padding-top: 7.5px;">
+                            <div ng-show="! exportAll">Select All:</div>
+                            <div ng-show="exportAll">Deselect All:</div>
+                        </div>
+                        <div style="float: left; padding-right: 5px; padding-left: 5px;" >
+                            <input style="vertical-align: middle; position: relative; margin-top: 11px; margin-right: 10px;" id="selectAllInput" ng-show="gotMappings" type="checkbox" ng-model="exportAll" ng-click="selectAllForExport()" >
+                        </div>
                         <div style="float: left; padding-right: 10px; padding-top: 7.5px;">Upload Draft Kings ID CSV</div>
                         <div style="float: left;" ngf-select ng-model="exportFile" name="exportFile" ngf-pattern="'*.csv'"
                              ngf-accept="'*.csv'" ngf-max-size="20MB" ngf-min-height="100">
@@ -106,51 +114,53 @@
                         </div>
                         <button style="float: left;" class="btn btn-default" ng-disabled="! exportFile" type="submit" ng-click="exportTeams()">Submit</button>
                     </form>
-
-                    <table class="table table-striped" ng-repeat="team in bestTeams">
-                        <thead>
-                            <tr>
-                                <th class="col-md-3">Name</th>
-                                <th class="col-md-1">Position</th>
-                                <th class="col-md-2">Salary</th>
-                                <th class="col-md-2">Expected Points</th>
-                                <th class="col-md-2">Ratio</th>
-                                <th class="col-md-2">Minutes</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr ng-repeat="player in team.roster">
-                                <td>{{ player.name }}</td>
-                                <td>{{ player.position }}</td>
-                                <td>{{ player.salary }}</td>
-                                <td>{{ player.pts }}</td>
-                                <td>{{ player.ratio }}</td>
-                                <td>{{ player.min }}</td>
-                            </tr>
-                            <tr>
-                                <td>Expected Points</td>
-                                <td>{{ team.expected_points | number : 4 }}</td>
-                                <td>Export: <input ng-show="gotMappings" type="checkbox" ng-model="team.export" ng-click="updateCsvData()"></td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    </div>
+                    <div style="width: 100%; height: 92.5%; scroll-y: auto;">
+                        <table class="table table-striped" ng-repeat="team in bestTeams">
+                            <thead>
+                                <tr>
+                                    <th class="col-md-3">Name</th>
+                                    <th class="col-md-1">Position</th>
+                                    <th class="col-md-2">Salary</th>
+                                    <th class="col-md-2">Expected Points</th>
+                                    <th class="col-md-2">Ratio</th>
+                                    <th class="col-md-2">Minutes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="player in team.roster">
+                                    <td>{{ player.name }}</td>
+                                    <td>{{ player.position }}</td>
+                                    <td>{{ player.salary }}</td>
+                                    <td>{{ player.pts }}</td>
+                                    <td>{{ player.ratio }}</td>
+                                    <td>{{ player.min }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Expected Points</td>
+                                    <td>{{ team.expected_points | number : 4 }}</td>
+                                    <td>Export: <input ng-show="gotMappings" type="checkbox" ng-model="team.export" ng-click="updateCsvData()"></td>
+                                    <td>&nbsp;</td>
+                                    <td>&nbsp;</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- Export Tab Content HTML -->
                 <div id="export" class="tab-pane fade">
-                    <button ng-show="canExport" style="float: left;" class="btn btn-default"  ng-csv="exportData" csv-header="['PG', 'SG', 'G', 'SF', 'PF', 'F', 'C', 'UTIL']" filename="teams.csv">Export</button>
+                    <button ng-show="canExport" style="float: left;" class="btn btn-default"  ng-csv="exportData" csv-header="['PG', 'SG', 'SF', 'PF', 'C', 'G', 'F', 'UTIL']" filename="teams.csv">Export</button>
                     <table class="table table-striped">
                         <thead>
                             <tr>
                                 <th>PG</th>
                                 <th>SG</th>
-                                <th>G</th>
                                 <th>SF</th>
                                 <th>PF</th>
-                                <th>F</th>
                                 <th>C</th>
+                                <th>G</th>
+                                <th>F</th>
                                 <th>UTIl</th>
                             </tr>
                         <tbody>

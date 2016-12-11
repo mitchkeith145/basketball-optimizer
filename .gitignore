@@ -1,2 +1,5 @@
 .idea/
 *.iml
+uploads/
+out/
+target/

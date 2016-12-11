@@ -12,6 +12,7 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
     $scope.utils = [];
     $scope.hideUpload = false;
     $scope.selectedPosition = "pg";
+    $scope.exportAll = true;
     $scope.positions = [{name: "Point Guard", code: "PG"},{name: "Shooting Guard", code: "SG"},{name: "Guard", code: "G"},
     {name: "Small Forward", code: "SF"},{name: "Power Forward", code: "PF"},{name: "Forward", code: "F"},
     {name: "Center", code: "C"},{name: "Utility", code: "UTIL"}];
@@ -151,7 +152,7 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
                     $scope.gs.push(player);
                 }
                 else if (player.position === "SG") {
-                    $scope.sfs.push(player);
+                    $scope.sgs.push(player);
                     $scope.gs.push(player);
                 }
                 else if (player.position === "SF") {
@@ -179,7 +180,7 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
     }
 
     $scope.generateTeams = function() {
-        var lists = [$scope.pgs, $scope.sgs, $scope.gs, $scope.sfs, $scope.pfs, $scope.fs, $scope.cs, $scope.utils];
+        var lists = [$scope.pgs, $scope.sgs, $scope.sfs, $scope.pfs, $scope.cs, $scope.gs, $scope.fs, $scope.utils];
 
         $scope.bestTeams = [];
         $http.post('/generate', JSON.stringify({"lists": lists}), {}).then(function(response) {
@@ -188,6 +189,13 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
             console.log("Error response.");
             console.log(response);
         });
+    }
+
+    $scope.selectAllForExport = function() {
+        for (var i = 0; i < $scope.bestTeams.length; i++) {
+            $scope.bestTeams[i].export = $scope.exportAll;
+        }
+        $scope.updateCsvData();
     }
 
     $scope.updateCsvData = function() {
@@ -216,6 +224,20 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
                 "g": "",
                 "h": ""
             }
+            //  0   1  2   3   4  5  6    7
+            // pg, sg, g, sf, pf, f, c, util
+            // pg, sg, sf, pf, c, g, f, util
+            //  0   1   3   4  6  2  5    7
+            // start swap
+
+            var temp = exports[i][2];
+            exports[i][2] = exports[i][3];
+            exports[i][3] = exports[i][4];
+            exports[i][4] = exports[i][6];
+            exports[i][6] = exports[i][5];
+            exports[i][5] = temp;
+            // finish swap
+            console.log(exports[i]);
             for (var j = 0; j < exports[i].roster.length; j++) {
                 exports[i].csv += $scope.playerIdMap[exports[i].roster[j].name];
                 if (count < exports[i].roster.length - 1) {
@@ -248,6 +270,7 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
             $scope.getPlayerIdList($scope.exportFile, function(resp) {
                 $scope.playerIdMap = resp.data;
                 $scope.gotMappings = true;
+                $scope.selectAllForExport();
             }, function(resp) {
                 console.log("Error response:");
                 console.log(resp);
