@@ -12,29 +12,29 @@ public class Player {
     public Double expectedPoints, Ratio, ValueRatio;
 
     public Player(CSVRecord record) { // instantiate Player from CSV data
-        Name = record.get("Name");
-        Position = record.get("Pos");
+        this.Name = record.get("Name");
+        this.Position = record.get("Pos");
         String sal = record.get("Price");
         String salary = String.join("", sal.split("\\$")[1].split(","));
-        Salary = Integer.parseInt(salary);
-        expectedPoints = Double.parseDouble(record.get("Value"));
-        Rank = Integer.parseInt(record.get("Rank"));
-        Ratio = Double.parseDouble(record.get("Ratio"));
-        PredictedMinutes = Integer.parseInt(record.get("m/g"));
-        ValueRatio = (Ratio * Ratio * expectedPoints);
+        this.Salary = Integer.parseInt(salary);
+        this.expectedPoints = Double.parseDouble(record.get("Value"));
+        this.Rank = Integer.parseInt(record.get("Rank"));
+        this.Ratio = Double.parseDouble(record.get("Ratio"));
+        this.PredictedMinutes = Integer.parseInt(record.get("m/g"));
+        this.ValueRatio = (Ratio * expectedPoints);
         Show();
     }
 
     public Player(String json) throws JSONException { // instantiate Player from JSON data
         JSONObject jsonObj = new JSONObject(json);
-        Name = jsonObj.get("name").toString();
-        Position = jsonObj.get("position").toString();
-        Ratio = Double.parseDouble(jsonObj.get("ratio").toString());
-        Salary = Integer.parseInt(jsonObj.get("salary").toString());
-        PredictedMinutes = Integer.parseInt(jsonObj.get("min").toString());
-        expectedPoints = Double.parseDouble(jsonObj.get("pts").toString());
-        Rank = Integer.parseInt(jsonObj.get("rank").toString());
-        ValueRatio = Double.parseDouble(jsonObj.get("value_ratio").toString());
+        this.Name = jsonObj.get("name").toString();
+        this.Position = jsonObj.get("position").toString();
+        this.Ratio = Double.parseDouble(jsonObj.get("ratio").toString());
+        this.Salary = Integer.parseInt(jsonObj.get("salary").toString());
+        this.PredictedMinutes = Integer.parseInt(jsonObj.get("min").toString());
+        this.expectedPoints = Double.parseDouble(jsonObj.get("pts").toString());
+        this.Rank = Integer.parseInt(jsonObj.get("rank").toString());
+        this.ValueRatio = Double.parseDouble(jsonObj.get("value_ratio").toString());
         Show();
     }
 

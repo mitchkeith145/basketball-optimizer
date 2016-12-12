@@ -5,12 +5,14 @@ import com.sun.org.apache.xpath.internal.operations.Bool;
 import java.util.ArrayList;
 import java.util.List;
 
+
 /**
  * Created by mitch on 11/23/16.
  */
 public class Team {
     public ArrayList<Player> Players = new ArrayList<>();
-    public Double totalExpectedPoints;
+    public Double totalExpectedPoints = 0.0d;
+
     public Team()
     {
 
@@ -18,9 +20,13 @@ public class Team {
 
     public Team(List<Player> players)
     {
+        Double expectedPoints = 0.0d;
         for (Player p: players) {
             Players.add(p);
+            expectedPoints += p.expectedPoints;
         }
+//        this.totalExpectedPoints = Util.round(expectedPoints, 3);
+        this.totalExpectedPoints = expectedPoints;
     }
 
     public Team Clone()
@@ -31,6 +37,7 @@ public class Team {
     public void Add(Player player)
     {
         Players.add(player);
+//        totalExpectedPoints += player.expectedPoints;
     }
 
     public Boolean HasPlayer(Player p)
@@ -44,11 +51,20 @@ public class Team {
     }
 
     public double TotalExpectedPoints() {
-        double sum = 0;
+//        if (totalExpectedPoints > 0) {
+//            System.out.println("We already have expectation");
+//            System.out.println("we got expectation: " + totalExpectedPoints);
+//            return totalExpectedPoints;
+//        }
+//        System.out.println("...");
+//        System.out.println("Players: " + Players.size());
+        double sum = 0.0;
         for (Player p : Players) {
             sum += p.expectedPoints;
         }
-        totalExpectedPoints = sum;
+//        System.out.println("Trying to round " + sum + " and set.");
+        this.totalExpectedPoints = Util.round(sum, 4);
+//        this.totalExpectedPoints = sum;
         return sum;
     }
 
@@ -80,29 +96,13 @@ public class Team {
     public String toJson() {
         /**
          *
-         * Returns JSON of the form:
-         * {
-         *    "expected_points": XYZ.abc,
-         *    "roster": [ {
-         *        "name": "blah",
-         *        "pos": "blah",
-         *        ...
-         *        "pts": 42
-         *        },
-         *        "name": "blah",
-         *        "pos": "blah",
-         *        ...
-         *        "pts": 42
-         *        },
-         *        ...
-         *        ...
-         *        ...
-         *     ]
-         * }
+         * Returns JSON object with two properties:
+         *  1. expected_points (a double)
+         *  2. roster (a list of Players)
          *
          */
         String json = "{";
-        json += "\"expected_points\":" + totalExpectedPoints + ",";
+        json += "\"expected_points\":" + TotalExpectedPoints() + ",";
         json += "\"roster\":[";
         int playerCount = 0;
         for (Player p : Players) {

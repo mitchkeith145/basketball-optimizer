@@ -14,45 +14,42 @@ import java.util.*;
  */
 
 public class TeamOptimizer {
-    public static int MaxLevel = 8;
+    private static int MaxLevel = 8;
+    private int addCount = 0;
+    private Set<Player> testList = new HashSet<>();
+    private int TopTierTeamCount = 20;
+    private int OptionsPerPosition = 0;
+    private TreeMap<Double, Team> topTierTeams = new TreeMap<>();
+    private List<Team> TopTierTeams = new ArrayList<>();
 
-    int TopTierTeamCount = 20;
-    int OptionsPerPosition = 0;
+    private List<Player> PG_List = new ArrayList<>();
+    private List<Player> SG_List = new ArrayList<>();
+    private List<Player> G_List = new ArrayList<>();
+    private List<Player> SF_List = new ArrayList<>();
+    private List<Player> PF_List = new ArrayList<>();
+    private List<Player> F_List = new ArrayList<>();
+    private List<Player> C_List = new ArrayList<>();
+    private List<Player> UTIL_List = new ArrayList<>();
 
-    List<Team> TopTierTeams = new ArrayList<>();
-    List<List<Player>> AllPlayers = new ArrayList<>();
-
-    List<Player> GuardList = new ArrayList<>();
-    List<Player> ForwardList = new ArrayList<>();
-    List<Player> CenterList = new ArrayList<>();
-
-    List<Player> PG_List = new ArrayList<>();
-    List<Player> SG_List = new ArrayList<>();
-    List<Player> G_List = new ArrayList<>();
-    List<Player> SF_List = new ArrayList<>();
-    List<Player> PF_List = new ArrayList<>();
-    List<Player> F_List = new ArrayList<>();
-    List<Player> C_List = new ArrayList<>();
-    public List<Player> UTIL_List = new ArrayList<>();
-
-    public List<Player> UtilityList = new ArrayList<>();
-
-    List<List<Player>> PlayerLists = new ArrayList<>();
+    private List<List<Player>> PlayerLists = new ArrayList<>();
 
     public TeamOptimizer(List<List<Player>> lists) {
         PlayerLists = lists;
         PG_List = lists.get(0);
         SG_List = lists.get(1);
-        G_List = lists.get(2);
-        SF_List = lists.get(3);
-        PF_List = lists.get(4);
-        F_List = lists.get(5);
-        C_List = lists.get(6);
+        SF_List = lists.get(2);
+        PF_List = lists.get(3);
+        C_List = lists.get(4);
+        G_List = lists.get(5);
+        F_List = lists.get(6);
         UTIL_List = lists.get(7);
+        System.out.println("Lists Retrieved");
+        for (List<Player> list : lists) {
+            System.out.println(list.size());
+        }
     }
 
-    public TeamOptimizer(String spreadsheetPath) throws IOException
-    {
+    public TeamOptimizer(String spreadsheetPath) throws IOException {
         System.out.println("Spreadsheet locale");
         System.out.println(spreadsheetPath);
         File csvData = new File(spreadsheetPath);
@@ -154,8 +151,7 @@ public class TeamOptimizer {
         PlayerLists.add(UTIL_List);
     }
 
-    private void RemoveFromPlayerLists(Player p)
-    {
+    private void RemoveFromPlayerLists(Player p) {
         for (List<Player> playerList : PlayerLists) {
             if (playerList.contains(p)) {
                 playerList.remove(p);
@@ -163,21 +159,8 @@ public class TeamOptimizer {
         }
     }
 
-    public Player FindPlayer(String partialName)
-    {
-        for (Player p : this.UtilityList)
-        {
-            if (p.Name.indexOf(partialName) > -1)
-            {
-                return p;
-            }
-        }
-        return null;
-    }
-
-    public List<Team> FindBestTeams(int cashLimit, int optionsPerPosition, int topTierCount)
-    {
-        System.out.println("finding best...");
+    public List<Team> FindBestTeams(int cashLimit, int optionsPerPosition, int topTierCount) {
+        System.out.println("finding best " + topTierCount);
 
         List<Player> orderedPlayers = null;
         List<List<Player>> newPlayerLists = new ArrayList<>();
@@ -200,33 +183,60 @@ public class TeamOptimizer {
             newPlayerLists.add(orderedPlayers);
         }
         PlayerLists = newPlayerLists;
-
-
+        String[] poss = new String[] { "pg", "sg", "sf", "pf", "c", "g", "f", "util" };
+        System.out.println("Lists Sorted: ");
+        int possCount = 0;
+        for (List<Player> list : PlayerLists) {
+            System.out.println("***** " + poss[possCount] + " *****");
+            for (Player p : list) {
+                p.Show();
+            }
+            possCount++;
+        }
 
         System.out.println("starting recursion...");
         ExploreTeamspace(0, cashLimit, new Team());
-        return this.TopTierTeams;
+        System.out.println("finished recursion...");
+        System.out.println(testList.size());
+        for (Player p : testList) {
+            p.Show();
+        }
+        List<Team> topList = new ArrayList<>();
+
+        for (Double key : this.topTierTeams.keySet()) {
+            Team team = this.topTierTeams.get(key);
+            topList.add(team);
+        }
+
+        Collections.reverse(topList);
+
+        return topList;
     }
 
     private void ExploreTeamspace(int level, int cashLimit, Team teamSoFar)
     {
-        if (level == MaxLevel)
-        {
-            TryAddToTopTierTeams(teamSoFar);
-            return;
+//        teamSoFar.Show(teamSoFar.Players.size());
+        if (level == MaxLevel) {
+            System.out.println("Trying to add team no." + addCount);
+            addCount++;
+            tryAddToTopTierTeams(teamSoFar);
         }
+        else {
+            int options = this.OptionsPerPosition;
+            if (level == 5 || level == 6) options = OptionsPerPosition * 2;
+            if (level == 7) options = OptionsPerPosition * 4;
 
-        int options = this.OptionsPerPosition;
-        if (level == 2 || level == 5) options = OptionsPerPosition * 2;
-        if (level == 7) options = OptionsPerPosition * 4;
+            for (int i = 0; i < options; i++)
+            {
+                Player newPlayer = PlayerLists.get(level).get(i);
+                testList.add(newPlayer);
+                if (newPlayer.Salary > cashLimit) continue;
+                if (teamSoFar.HasPlayer(newPlayer)) continue;
+                ExploreTeamspace(level + 1, cashLimit - newPlayer.Salary, ExtendTeam(teamSoFar, newPlayer));
 
-        for (int i = 0; i < options; i++)
-        {
-            Player newPlayer = PlayerLists.get(level).get(i);
-            if (newPlayer.Salary > cashLimit) continue;
-            if (teamSoFar.HasPlayer(newPlayer)) continue;
-            ExploreTeamspace(level + 1, cashLimit - newPlayer.Salary, ExtendTeam(teamSoFar, newPlayer));
+            }
         }
+        //
     }
     private Team ExtendTeam(Team teamSoFar, Player newPlayer)
     {
@@ -254,6 +264,21 @@ public class TeamOptimizer {
         if (TopTierTeams.size() < TopTierTeamCount) {
             TopTierTeams.add(team.Clone());
         }
+    }
+
+    private void tryAddToTopTierTeams(Team team)
+    {
+//        System.out.println("Trying to add... " + addCount + "; " + team.TotalExpectedPoints());
+//        addCount++;
+        if (!topTierTeams.containsKey(team.TotalExpectedPoints()))
+        {
+            topTierTeams.put(team.TotalExpectedPoints(), team);
+
+            if (topTierTeams.size() >= TopTierTeamCount) {
+                topTierTeams.remove(topTierTeams.firstKey());
+            }
+        }
+        System.out.println(topTierTeams.size());
     }
 
     private void TruncatePlayerList(int truncateSize, List<Player> playerList)

@@ -369,7 +369,7 @@ public class Main {
             JSONObject playerList = new JSONObject(body);
             JSONArray lists = playerList.getJSONArray("lists");
             System.out.println("Num of lists: " + lists.length());
-            String[] positions = new String[]{"PG", "SG", "G", "SF", "PF", "F", "C", "UTIL"};
+            String[] positions = new String[]{"PG", "SG", "SF", "PF", "C", "G", "F", "UTIL"};
             List<List<Player>> playerLists = new ArrayList<>();
             for (int i = 0; i < lists.length(); i++) {
                 List<Player> positionList = new ArrayList<Player>();
@@ -395,13 +395,7 @@ public class Main {
             long endTime   = System.currentTimeMillis();
             long totalTime = endTime - startTime;
             System.out.println("Team optimization finished in " + (totalTime * 0.001) + " seconds.");
-
-//            JSONObject root = new JSONObject();
-//            JSONArray teams = new JSONArray();
-//            for (Team team : topTeams) {
-//                teams.put(new JSONObject(team.toJson()));
-//            }
-//            root.append("teams", teams);
+            System.out.println(topTeams.size());
             int teamCount = 0;
             String json = "{\"teams\":[";
             for (Team team : topTeams) {
