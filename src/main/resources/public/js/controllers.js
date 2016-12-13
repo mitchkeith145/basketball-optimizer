@@ -94,13 +94,13 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
     $scope.increaseProjectedPoints = function(player) {
         player.pts = (player.pts + 1);
         player.ratio = ((player.pts / player.salary) * 10000).toFixed(3);;
-        player.value_ratio = (player.ratio * player.ratio * player.pts);
+        player.value_ratio = (player.ratio * player.pts);
     }
 
     $scope.decreaseProjectedPoints = function(player) {
         player.pts = (player.pts - 1);
         player.ratio = ((player.pts / player.salary) * 10000).toFixed(3);
-        player.value_ratio = (player.ratio * player.ratio * player.pts);
+        player.value_ratio = (player.ratio * player.pts);
     }
 
     $scope.getPositionLists = function() {

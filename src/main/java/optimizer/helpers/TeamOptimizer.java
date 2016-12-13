@@ -18,8 +18,9 @@ public class TeamOptimizer {
 
     int TopTierTeamCount = 20;
     int OptionsPerPosition = 0;
-
+    int addCount = 0, secondaryAddCount = 0;
     List<Team> TopTierTeams = new ArrayList<>();
+    private TreeSet<Team> sortedTopTierTeams = new TreeSet<>(new TeamComparator());
     List<List<Player>> AllPlayers = new ArrayList<>();
 
     List<Player> GuardList = new ArrayList<>();
@@ -175,7 +176,7 @@ public class TeamOptimizer {
         return null;
     }
 
-    public List<Team> FindBestTeams(int cashLimit, int optionsPerPosition, int topTierCount)
+    public Set<Team> FindBestTeams(int cashLimit, int optionsPerPosition, int topTierCount)
     {
         System.out.println("finding best...");
 
@@ -205,14 +206,18 @@ public class TeamOptimizer {
 
         System.out.println("starting recursion...");
         ExploreTeamspace(0, cashLimit, new Team());
-        return this.TopTierTeams;
+        System.out.println("ending recursion...");
+        System.out.println("Tried adding " + addCount + " different teams.");
+        return this.sortedTopTierTeams;
     }
 
     private void ExploreTeamspace(int level, int cashLimit, Team teamSoFar)
     {
         if (level == MaxLevel)
         {
-            TryAddToTopTierTeams(teamSoFar);
+
+            tryToAddToTopTierTeams(teamSoFar);
+//            TryAddToTopTierTeams(teamSoFar);
             return;
         }
 
@@ -235,8 +240,21 @@ public class TeamOptimizer {
         return extendedTeam;
     }
 
+    private void tryToAddToTopTierTeams(Team team) {
+        addCount++;
+        int index = 0;
+
+
+        sortedTopTierTeams.add(team.Clone());
+        if (sortedTopTierTeams.size() > TopTierTeamCount) {
+            sortedTopTierTeams.remove(sortedTopTierTeams.last());
+        }
+
+    }
+
     private void TryAddToTopTierTeams(Team team)
     {
+        addCount++;
         int index = 0;
 
         for (Team topTierTeam : TopTierTeams) {

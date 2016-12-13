@@ -3,6 +3,7 @@ package optimizer.helpers;
 import com.sun.org.apache.xpath.internal.operations.Bool;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -10,7 +11,7 @@ import java.util.List;
  */
 public class Team {
     public ArrayList<Player> Players = new ArrayList<>();
-    public Double totalExpectedPoints;
+    public Double totalExpectedPoints = 0.0;
     public Team()
     {
 
@@ -44,7 +45,11 @@ public class Team {
     }
 
     public double TotalExpectedPoints() {
-        double sum = 0;
+        if (totalExpectedPoints > 0.0) {
+            return totalExpectedPoints;
+        }
+
+        double sum = 0.0;
         for (Player p : Players) {
             sum += p.expectedPoints;
         }

@@ -21,7 +21,7 @@ public class Player {
         Rank = Integer.parseInt(record.get("Rank"));
         Ratio = Double.parseDouble(record.get("Ratio"));
         PredictedMinutes = Integer.parseInt(record.get("m/g"));
-        ValueRatio = (Ratio * Ratio * expectedPoints);
+        ValueRatio = (Ratio * expectedPoints);
         Show();
     }
 

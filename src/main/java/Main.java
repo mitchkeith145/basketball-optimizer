@@ -390,10 +390,11 @@ public class Main {
             System.out.println("Team optimization started...");
             long startTime = System.currentTimeMillis();
             TeamOptimizer optimizer = new TeamOptimizer(playerLists);
-            List<Team> topTeams = optimizer.FindBestTeams(50000, 5, 100);
+            Set<Team> topTeams = optimizer.FindBestTeams(50000, 7, 50000);
 
             long endTime   = System.currentTimeMillis();
             long totalTime = endTime - startTime;
+            System.out.println("Got " + topTeams.size() + " total teams.");
             System.out.println("Team optimization finished in " + (totalTime * 0.001) + " seconds.");
 
 //            JSONObject root = new JSONObject();
@@ -404,8 +405,13 @@ public class Main {
 //            root.append("teams", teams);
             int teamCount = 0;
             String json = "{\"teams\":[";
+
             for (Team team : topTeams) {
                 json += team.toJson();
+                if (teamCount == 250) {
+                    json += "]}";
+                    return json;
+                }
                 if (teamCount < topTeams.size() - 1) {
                     json += ",";
                 }
@@ -488,10 +494,11 @@ public class Main {
 
 
                 TeamOptimizer optimizer = new TeamOptimizer("uploads/" + fTitle + "-" + fName);
-                List<Team> topTeams = optimizer.FindBestTeams(50000, 7, 100);
+                Set<Team> topTeams = optimizer.FindBestTeams(50000, 7, 1000);
                 long endTime   = System.currentTimeMillis();
                 long totalTime = endTime - startTime;
-                System.out.println("Team optimization finished in " + (totalTime * 0.001) + " seconds.");
+                System.out.println("Got " + topTeams.size() + " total teams.");
+                System.out.println("Team optimization finished in " + (totalTime * 0.001) + " seconds!!!");
                 String page = "<!DOCTYPE html>\n" +
                         "<html><head><link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\" integrity=\"sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u\" crossorigin=\"anonymous\"><title>Best Teams</title></head>\n" +
                         "<body>\n";
