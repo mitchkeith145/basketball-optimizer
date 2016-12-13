@@ -185,6 +185,13 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
         $scope.bestTeams = [];
         $http.post('/generate', JSON.stringify({"lists": lists}), {}).then(function(response) {
             $scope.bestTeams = response.data.teams;
+            for (var i = 0; i < $scope.bestTeams.length; i++) {
+                var total = 0;
+                for (var j = 0; j < $scope.bestTeams[i].roster.length; j++) {
+                    total += $scope.bestTeams[i].roster[j].salary;
+                }
+                $scope.bestTeams[i].total_salary = total;
+            }
         }, function(response) {
             console.log("Error response.");
             console.log(response);

@@ -20,6 +20,8 @@ public class TeamOptimizer {
     int OptionsPerPosition = 0;
     int addCount = 0, secondaryAddCount = 0;
     List<Team> TopTierTeams = new ArrayList<>();
+
+    // instantiate a TreeSet (ie sorted set) to use a custom comparator, TeamComparator, for sorting
     private TreeSet<Team> sortedTopTierTeams = new TreeSet<>(new TeamComparator());
     List<List<Player>> AllPlayers = new ArrayList<>();
 
@@ -242,8 +244,6 @@ public class TeamOptimizer {
 
     private void tryToAddToTopTierTeams(Team team) {
         addCount++;
-        int index = 0;
-
 
         sortedTopTierTeams.add(team.Clone());
         if (sortedTopTierTeams.size() > TopTierTeamCount) {

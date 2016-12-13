@@ -121,8 +121,8 @@
                                 <tr>
                                     <th class="col-md-3">Name</th>
                                     <th class="col-md-1">Position</th>
-                                    <th class="col-md-2">Salary</th>
                                     <th class="col-md-2">Expected Points</th>
+                                    <th class="col-md-2">Salary</th>
                                     <th class="col-md-2">Ratio</th>
                                     <th class="col-md-2">Minutes</th>
                                 </tr>
@@ -131,17 +131,19 @@
                                 <tr ng-repeat="player in team.roster">
                                     <td>{{ player.name }}</td>
                                     <td>{{ player.position }}</td>
-                                    <td>{{ player.salary }}</td>
                                     <td>{{ player.pts }}</td>
+                                    <td>{{ player.salary }}</td>
                                     <td>{{ player.ratio }}</td>
                                     <td>{{ player.min }}</td>
                                 </tr>
                                 <tr>
-                                    <td>Expected Points</td>
+                                    <td>Totals</td>
+                                    <td>&nbsp;</td>
                                     <td>{{ team.expected_points | number : 4 }}</td>
-                                    <td>Export: <input ng-show="gotMappings" type="checkbox" ng-model="team.export" ng-click="updateCsvData()"></td>
+                                    <td>{{ team.total_salary }}</td>
                                     <td>&nbsp;</td>
-                                    <td>&nbsp;</td>
+                                    <td ng-show="gotMappings">Export: <input ng-show="gotMappings" type="checkbox" ng-model="team.export" ng-click="updateCsvData()"></td>
+                                    <td ng-hide="gotMappings">&nbsp;</td>
                                 </tr>
                             </tbody>
                         </table>
