@@ -397,12 +397,6 @@ public class Main {
             System.out.println("Got " + topTeams.size() + " total teams.");
             System.out.println("Team optimization finished in " + (totalTime * 0.001) + " seconds.");
 
-//            JSONObject root = new JSONObject();
-//            JSONArray teams = new JSONArray();
-//            for (Team team : topTeams) {
-//                teams.put(new JSONObject(team.toJson()));
-//            }
-//            root.append("teams", teams);
             int teamCount = 0;
             String json = "{\"teams\":[";
 
