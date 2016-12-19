@@ -2,6 +2,7 @@
 <html lang="en" style="width: 100%; height:100%;">
     <head>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <link rel="stylesheet" href="css/app.css">
         <meta charset="UTF-8">
         <title>Fantasy Basketball Optimizer</title>
     </head>
@@ -26,7 +27,7 @@
             <ul class="nav nav-tabs">
                 <li class="active"><a data-toggle="tab" href="#complete">Complete List</a></li>
                 <li><a ng-click="getPositionLists()" data-toggle="tab" href="#positions">Position Lists</a></li>
-                <li><a data-toggle="tab" href="#generate">Generate Teams</a></li>
+                <li><a data-toggle="tab" href="#generate" ng-click="getRestrictions()">Generate Teams</a></li>
                 <li ng-show="canExport"><a data-toggle="tab" href="#export">Export Teams</a></li>
             </ul>
 
@@ -36,6 +37,7 @@
                     <table class="table table-striped">
                         <thead>
                         <th>Name</th>
+                        <th>Restrict (%)</th>
                         <th>Position</th>
                         <th>Salary</th>
                         <th>Projected Points</th>
@@ -46,7 +48,15 @@
                         </thead>
                         <tbody>
                         <tr ng-repeat="player in players">
-                            <td>{{ player.name }}</td>
+                            <td>
+                                <div>{{ player.name }}</div>
+                            </td>
+                            <td>
+                                <div style="width: 25px">
+                                    <input ng-model="player.restriction" style="width:100%; float:left;"/>
+                                </div>
+                                <div style="float:left;">%</div>
+                            </td>
                             <td>{{ player.position }}</td>
                             <td>{{ player.salary }}</td>
                             <td>
@@ -96,24 +106,79 @@
 
                 <!-- Generate Teams Tab Content HTML -->
                 <div id="generate" class="tab-pane fade" style="width: 100%; height:100%;">
-                    <div style="width: 100%; height: 7.5%; scroll-y: auto;">
-                    <button class="btn btn-default"  ng-click="generateTeams()" style="float: left;">Generate</button>
+                    <div style="width: 100%; height: 100%;" ng-show="generationInProgress">
+                        <div class="sk-circle">
+                            <div class="sk-circle1 sk-child">&nbsp;</div>
+                            <div class="sk-circle2 sk-child">&nbsp;</div>
+                            <div class="sk-circle3 sk-child">&nbsp;</div>
+                            <div class="sk-circle4 sk-child">&nbsp;</div>
+                            <div class="sk-circle5 sk-child">&nbsp;</div>
+                            <div class="sk-circle6 sk-child">&nbsp;</div>
+                            <div class="sk-circle7 sk-child">&nbsp;</div>
+                            <div class="sk-circle8 sk-child">&nbsp;</div>
+                            <div class="sk-circle9 sk-child">&nbsp;</div>
+                            <div class="sk-circle10 sk-child">&nbsp;</div>
+                            <div class="sk-circle11 sk-child">&nbsp;</div>
+                            <div class="sk-circle12 sk-child">&nbsp;</div>
+                        </div>
+                    </div>
 
-                    <form ng-show="bestTeams.length > 0" name="exportForm" style="float: right;">
-                        <div ng-show="gotMappings" style="float: left; padding-right: 10px; padding-top: 7.5px;">
-                            <div ng-show="! exportAll">Select All:</div>
-                            <div ng-show="exportAll">Deselect All:</div>
+                    <div style="height: 150px;" ng-show="configureGeneration">
+                        <div style="width: 80%; margin-left: 10%; border-radius: 20px">
+                            <div style="width: 100%; height: 100%; padding-top: 25px; ">
+                                <div ng-show="restrictions.length > 0" style="width: 50%; float:left;">
+                                    <h4>Player Restrictions</h4>
+                                    <div style="width:100%; height: 15px">&nbsp;</div>
+                                    <table class="table table-bordered table-condensed" style="background-color: white;">
+                                        <thead>
+                                            <tr>
+                                                <th>Player</th>
+                                                <th>Max %</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody style="overflow-y: auto;">
+                                            <tr ng-repeat="restriction in restrictions">
+                                                <td>{{ restriction.player.name }}</td>
+                                                <td>{{ restriction.percentage }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div style="width: 50%; float: right;">
+                                    <h4 style="margin-left: 5%;">Additional Config</h4>
+                                    <div style="width:100%; height: 15px">&nbsp;</div>
+                                    <div style="width: 80%; margin-left: 5%;">
+                                        <div style="width: 75%; float: left;">Universal Max Percentage</div>
+                                        <div style="width: 25%; float: left;"><input ng-model="universalMax" style="width: 100%" type="text"/></div>
+                                    </div>
+                                    <div style="width: 80%; margin-left: 5%;">
+                                        <div style="width: 75%; float: left;"># Teams to Generate</div>
+                                        <div style="width: 25%; float: left;"><input ng-model="batchSize" style="width: 100%" type="text"/></div>
+                                    </div>
+                                    <div style="width:100%; height: 5px">&nbsp;</div>
+                                    <button class="btn btn-default" style="margin-left: 5%;" ng-click="getRestrictionsAndGenerate();">Generate</button>
+                                </div>
+                            </div>
                         </div>
-                        <div style="float: left; padding-right: 5px; padding-left: 5px;" >
-                            <input style="vertical-align: middle; position: relative; margin-top: 11px; margin-right: 10px;" id="selectAllInput" ng-show="gotMappings" type="checkbox" ng-model="exportAll" ng-click="selectAllForExport()" >
-                        </div>
-                        <div style="float: left; padding-right: 10px; padding-top: 7.5px;">Upload Draft Kings ID CSV</div>
-                        <div style="float: left;" ngf-select ng-model="exportFile" name="exportFile" ngf-pattern="'*.csv'"
-                             ngf-accept="'*.csv'" ngf-max-size="20MB" ngf-min-height="100">
-                            <button class="btn btn-default" >Select</button>
-                        </div>
-                        <button style="float: left;" class="btn btn-default" ng-disabled="! exportFile" type="submit" ng-click="exportTeams()">Submit</button>
-                    </form>
+                    </div>
+                    <br>
+                    <div style="width: 100%; height: 7.5%; scroll-y: auto; margin-top: 25px;">
+                        <button class="btn btn-default" ng-hide="configureGeneration" style="float:left;" ng-click="configureGeneration = !configureGeneration;">Configure</button>
+                        <form ng-show="bestTeams.length > 0" name="exportForm" style="float: right;">
+                            <div ng-show="gotMappings" style="float: left; padding-right: 10px; padding-top: 7.5px;">
+                                <div ng-show="! exportAll">Select All:</div>
+                                <div ng-show="exportAll">Deselect All:</div>
+                            </div>
+                            <div style="float: left; padding-right: 5px; padding-left: 5px;" >
+                                <input style="vertical-align: middle; position: relative; margin-top: 11px; margin-right: 10px;" id="selectAllInput" ng-show="gotMappings" type="checkbox" ng-model="exportAll" ng-click="selectAllForExport()" >
+                            </div>
+                            <div style="float: left; padding-right: 10px; padding-top: 7.5px;">Upload Draft Kings ID CSV</div>
+                            <div style="float: left;" ngf-select ng-model="exportFile" name="exportFile" ngf-pattern="'*.csv'"
+                                 ngf-accept="'*.csv'" ngf-max-size="20MB" ngf-min-height="100">
+                                <button class="btn btn-default" >Select</button>
+                            </div>
+                            <button style="float: left;" class="btn btn-default" ng-disabled="! exportFile" type="submit" ng-click="exportTeams()">Submit</button>
+                        </form>
                     </div>
                     <div style="width: 100%; height: 92.5%; scroll-y: auto;">
                         <table class="table table-striped" ng-repeat="team in bestTeams">

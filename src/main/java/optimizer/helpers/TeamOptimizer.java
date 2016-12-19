@@ -223,7 +223,7 @@ public class TeamOptimizer {
         }
 
         int options = this.OptionsPerPosition;
-        if (level == 5 || level == 6) options = OptionsPerPosition * 2;
+        if (level == 4 || level == 3) options = OptionsPerPosition * 2;
         if (level == 7) options = OptionsPerPosition * 4;
 
         for (int i = 0; i < options; i++)
