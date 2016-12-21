@@ -14,30 +14,30 @@ import java.util.*;
  */
 
 public class TeamOptimizer {
-    public static int MaxLevel = 8;
+    private static int MaxLevel = 8;
 
-    int TopTierTeamCount = 20;
-    int OptionsPerPosition = 0;
+    private int TopTierTeamCount = 20;
+    private int OptionsPerPosition = 0;
+    private int addCount = 0, secondaryAddCount = 0;
+    private List<Team> TopTierTeams = new ArrayList<>();
 
-    List<Team> TopTierTeams = new ArrayList<>();
-    List<List<Player>> AllPlayers = new ArrayList<>();
+    // instantiate a TreeSet (ie sorted set) to use a custom comparator, TeamComparator, for sorting
+    private TreeSet<Team> sortedTopTierTeams = new TreeSet<>(new TeamComparator());
 
-    List<Player> GuardList = new ArrayList<>();
-    List<Player> ForwardList = new ArrayList<>();
-    List<Player> CenterList = new ArrayList<>();
+    private List<Player> PG_List = new ArrayList<>();
+    private List<Player> SG_List = new ArrayList<>();
+    private List<Player> G_List = new ArrayList<>();
+    private List<Player> SF_List = new ArrayList<>();
+    private List<Player> PF_List = new ArrayList<>();
+    private List<Player> F_List = new ArrayList<>();
+    private List<Player> C_List = new ArrayList<>();
 
-    List<Player> PG_List = new ArrayList<>();
-    List<Player> SG_List = new ArrayList<>();
-    List<Player> G_List = new ArrayList<>();
-    List<Player> SF_List = new ArrayList<>();
-    List<Player> PF_List = new ArrayList<>();
-    List<Player> F_List = new ArrayList<>();
-    List<Player> C_List = new ArrayList<>();
-    public List<Player> UTIL_List = new ArrayList<>();
 
-    public List<Player> UtilityList = new ArrayList<>();
+    private List<Player> UTIL_List = new ArrayList<>();
 
-    List<List<Player>> PlayerLists = new ArrayList<>();
+    private List<Player> UtilityList = new ArrayList<>();
+
+    private List<List<Player>> PlayerLists = new ArrayList<>();
 
     public TeamOptimizer(List<List<Player>> lists) {
         PlayerLists = lists;
@@ -175,7 +175,7 @@ public class TeamOptimizer {
         return null;
     }
 
-    public List<Team> FindBestTeams(int cashLimit, int optionsPerPosition, int topTierCount)
+    public Set<Team> FindBestTeams(int cashLimit, int optionsPerPosition, int topTierCount)
     {
         System.out.println("finding best...");
 
@@ -184,10 +184,11 @@ public class TeamOptimizer {
         TopTierTeamCount = topTierCount;
 
         OptionsPerPosition = optionsPerPosition;
+        int i = 0;
         for (List<Player> playerList : PlayerLists)
         {
             //list.sort(Comparator.comparing(a -> a.attr));
-            if (playerList.size() < 150) {
+            if (i < PlayerLists.size() - 1) {
                 playerList.sort(Comparator.comparing(p -> p.ValueRatio));
                 Collections.reverse(playerList);
                 orderedPlayers = playerList;
@@ -197,6 +198,7 @@ public class TeamOptimizer {
                 Collections.reverse(playerList);
                 orderedPlayers = playerList;
             }
+            i++;
             newPlayerLists.add(orderedPlayers);
         }
         PlayerLists = newPlayerLists;
@@ -205,19 +207,23 @@ public class TeamOptimizer {
 
         System.out.println("starting recursion...");
         ExploreTeamspace(0, cashLimit, new Team());
-        return this.TopTierTeams;
+        System.out.println("ending recursion...");
+        System.out.println("Tried adding " + addCount + " different teams.");
+        return this.sortedTopTierTeams;
     }
 
     private void ExploreTeamspace(int level, int cashLimit, Team teamSoFar)
     {
         if (level == MaxLevel)
         {
-            TryAddToTopTierTeams(teamSoFar);
+
+            tryToAddToTopTierTeams(teamSoFar);
+//            TryAddToTopTierTeams(teamSoFar);
             return;
         }
 
         int options = this.OptionsPerPosition;
-        if (level == 2 || level == 5) options = OptionsPerPosition * 2;
+        if (level == 4 || level == 3) options = OptionsPerPosition * 2;
         if (level == 7) options = OptionsPerPosition * 4;
 
         for (int i = 0; i < options; i++)
@@ -235,8 +241,19 @@ public class TeamOptimizer {
         return extendedTeam;
     }
 
+    private void tryToAddToTopTierTeams(Team team) {
+        addCount++;
+
+        sortedTopTierTeams.add(team.Clone());
+        if (sortedTopTierTeams.size() > TopTierTeamCount) {
+            sortedTopTierTeams.remove(sortedTopTierTeams.last());
+        }
+
+    }
+
     private void TryAddToTopTierTeams(Team team)
     {
+        addCount++;
         int index = 0;
 
         for (Team topTierTeam : TopTierTeams) {

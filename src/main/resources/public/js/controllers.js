@@ -17,7 +17,8 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
     {name: "Small Forward", code: "SF"},{name: "Power Forward", code: "PF"},{name: "Forward", code: "F"},
     {name: "Center", code: "C"},{name: "Utility", code: "UTIL"}];
     $scope.canExport = false;
-
+    $scope.configurationMode = true;
+    $scope.configureGeneration = true;
     $scope.submit = function() {
         if ($scope.form.file.$valid && $scope.file) {
             $scope.upload($scope.file);
@@ -94,13 +95,13 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
     $scope.increaseProjectedPoints = function(player) {
         player.pts = (player.pts + 1);
         player.ratio = ((player.pts / player.salary) * 10000).toFixed(3);;
-        player.value_ratio = (player.ratio * player.ratio * player.pts);
+        player.value_ratio = (player.ratio * player.pts);
     }
 
     $scope.decreaseProjectedPoints = function(player) {
         player.pts = (player.pts - 1);
         player.ratio = ((player.pts / player.salary) * 10000).toFixed(3);
-        player.value_ratio = (player.ratio * player.ratio * player.pts);
+        player.value_ratio = (player.ratio * player.pts);
     }
 
     $scope.getPositionLists = function() {
@@ -179,12 +180,48 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
         console.log($scope.utils);
     }
 
+    $scope.getRestrictionsAndGenerate = function() {
+        $scope.getRestrictions();
+        $scope.generateTeams();
+    }
+
+    $scope.getRestrictions = function() {
+        var restrictions = [];
+        for (var i = 0; i < $scope.players.length; i++) {
+            if ($scope.players[i].restriction) {
+                restrictions.push({
+                    "player": $scope.players[i],
+                    "percentage": parseInt($scope.players[i].restriction)
+                });
+            }
+        }
+        $scope.restrictions = restrictions;
+    }
+
     $scope.generateTeams = function() {
         var lists = [$scope.pgs, $scope.sgs, $scope.sfs, $scope.pfs, $scope.cs, $scope.gs, $scope.fs, $scope.utils];
 
         $scope.bestTeams = [];
-        $http.post('/generate', JSON.stringify({"lists": lists}), {}).then(function(response) {
+        $scope.generationInProgress = true;
+
+        var data = {
+            "lists": lists,
+            "restrictions": $scope.restrictions,
+            "universal_max": parseInt($scope.universalMax) ? parseInt($scope.universalMax) : 0,
+            "batch_size": parseInt($scope.batchSize) ? parseInt($scope.batchSize) : 0
+        }
+
+        $http.post('/generate', JSON.stringify(data), {}).then(function(response) {
             $scope.bestTeams = response.data.teams;
+            $scope.generationInProgress = false;
+            $scope.configureGeneration = false;
+            for (var i = 0; i < $scope.bestTeams.length; i++) {
+                var total = 0;
+                for (var j = 0; j < $scope.bestTeams[i].roster.length; j++) {
+                    total += $scope.bestTeams[i].roster[j].salary;
+                }
+                $scope.bestTeams[i].total_salary = total;
+            }
         }, function(response) {
             console.log("Error response.");
             console.log(response);

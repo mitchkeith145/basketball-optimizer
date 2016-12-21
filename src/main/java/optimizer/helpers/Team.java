@@ -3,38 +3,37 @@ package optimizer.helpers;
 import com.sun.org.apache.xpath.internal.operations.Bool;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.StringJoiner;
 
 /**
  * Created by mitch on 11/23/16.
  */
 public class Team {
     public ArrayList<Player> Players = new ArrayList<>();
-    public Double totalExpectedPoints;
-    public Team()
-    {
+    public Double totalExpectedPoints = 0.0;
+    public Integer rank = -1;
+    ArrayList<PlayerConstraint> playerConstraints = new ArrayList<>();
+    public Team() {
 
     }
 
-    public Team(List<Player> players)
-    {
+    public Team(List<Player> players) {
         for (Player p: players) {
             Players.add(p);
         }
     }
 
-    public Team Clone()
-    {
+    public Team Clone() {
         Team clone = new Team(Players);
         return clone;
     }
-    public void Add(Player player)
-    {
+    public void Add(Player player) {
         Players.add(player);
     }
 
-    public Boolean HasPlayer(Player p)
-    {
+    public Boolean HasPlayer(Player p) {
         for (Player player : Players) {
             if (player.Name.equals(p.Name)) {
                 return true;
@@ -43,11 +42,25 @@ public class Team {
         return false;
     }
 
+    public boolean HasPlayer(String name) {
+        for (Player player : Players) {
+            if (player.Name.equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public double TotalExpectedPoints() {
-        double sum = 0;
+        if (totalExpectedPoints > 0.0) {
+            return totalExpectedPoints;
+        }
+
+        double sum = 0.0;
         for (Player p : Players) {
             sum += p.expectedPoints;
         }
+        sum = Util.round(sum, 3);
         totalExpectedPoints = sum;
         return sum;
     }
@@ -60,8 +73,7 @@ public class Team {
         return sum;
     }
 
-    public String Show(int number)
-    {
+    public String Show(int number) {
         System.out.println();
         System.out.println(number + ") Total Expected Points: " + String.format("%.2f", TotalExpectedPoints()));
         String table = "<table class='table table-striped'><thead>" +
@@ -119,4 +131,36 @@ public class Team {
     public Boolean isEquals(Team t) {
         return Math.abs(t.TotalExpectedPoints() - TotalExpectedPoints()) < 0.00001;
     }
+
+    public boolean MeetsConstraints(List<PlayerConstraint> constraints) {
+        for (PlayerConstraint constraint : constraints) {
+            if (this.HasConstraintForPlayer(constraint.playerName))
+                return false;
+            if (!MeetsConstraint(constraint))
+                return false;
+        }
+        return true;
+    }
+
+    public boolean HasConstraintForPlayer(String playerName) {
+        for (PlayerConstraint constraint : playerConstraints) {
+            if (constraint.playerName.equals(playerName))
+                return true;
+        }
+        return false;
+    }
+
+    public boolean MeetsConstraint(PlayerConstraint constraint) {
+        for (Player p : Players) {
+            if (p.Name.equals(constraint.playerName)) {
+                return constraint.in;
+            }
+        }
+
+        if (constraint.in)
+            return false;
+
+        return true;
+    }
+
 }

@@ -8,7 +8,7 @@ import static spark.Spark.*;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import optimizer.helpers.MonsterParser;
+import optimizer.helpers.*;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import spark.ModelAndView;
@@ -24,9 +24,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.io.IOException;
-import optimizer.helpers.Player;
-import optimizer.helpers.Team;
-import optimizer.helpers.TeamOptimizer;
+
 import spark.Spark;
 import org.json.*;
 
@@ -368,9 +366,14 @@ public class Main {
             System.out.println(body);
             JSONObject playerList = new JSONObject(body);
             JSONArray lists = playerList.getJSONArray("lists");
+            JSONArray restrictions = playerList.getJSONArray("restrictions");
+            int batchSize = playerList.getInt("batch_size"),
+                universalMax = playerList.getInt("universal_max");
             System.out.println("Num of lists: " + lists.length());
             String[] positions = new String[]{"PG", "SG", "G", "SF", "PF", "F", "C", "UTIL"};
-            List<List<Player>> playerLists = new ArrayList<>();
+            ArrayList<List<Player>> playerLists = new ArrayList<>();
+            ArrayList<PlayerConstraint> playerConstraints = new ArrayList<>();
+            /* Convert the List of Players from JSON to Java */
             for (int i = 0; i < lists.length(); i++) {
                 List<Player> positionList = new ArrayList<Player>();
                 for (int j = 0; j < lists.getJSONArray(i).length(); j++) {
@@ -387,26 +390,53 @@ public class Main {
                     player.Show();
                 }
             }
+
+            /* Convert the restriction list from JSON to Java */
+            for (int i = 0; i < restrictions.length(); i++) {
+
+                JSONObject restriction = restrictions.getJSONObject(i);
+                restriction.getJSONObject("player").get("name");
+                playerConstraints.add(new PlayerConstraint(restriction.getJSONObject("player").getString("name"),
+                                                           restriction.getInt("percentage")));
+            }
+
+
+
             System.out.println("Team optimization started...");
             long startTime = System.currentTimeMillis();
             TeamOptimizer optimizer = new TeamOptimizer(playerLists);
-            List<Team> topTeams = optimizer.FindBestTeams(50000, 5, 100);
+            Set<Team> topTeams = optimizer.FindBestTeams(50000, 6, 50000);
+            ArrayList<Team> topTeamList = Util.convertSetToList(topTeams);
+
+            TeamSetSelector teamSetSelector = new TeamSetSelector(batchSize, topTeamList);
+            ArrayList<Team> selectedTeams = teamSetSelector.SelectTeams(playerConstraints);
+            if (universalMax > 0) {
+                selectedTeams = teamSetSelector.RunAutoPercent(universalMax);
+            }
+
+            teamSetSelector.ShowStats();
+//            TeamSetSelector teamSetSelect = new TeamSetSelector(50, topTeams);
+//            List<Team> selectedTeams = teamSetSelect.SelectTeams(playerConstraints);     //pulls in diverse players
+//            selectedTeams = teamSetSelect.RunAutoPercent(60);     //ensures no player used more that 60%
+//            teamSetSelect.ShowStats();
+
+
 
             long endTime   = System.currentTimeMillis();
             long totalTime = endTime - startTime;
+            System.out.println("Got " + topTeams.size() + " total teams.");
             System.out.println("Team optimization finished in " + (totalTime * 0.001) + " seconds.");
 
-//            JSONObject root = new JSONObject();
-//            JSONArray teams = new JSONArray();
-//            for (Team team : topTeams) {
-//                teams.put(new JSONObject(team.toJson()));
-//            }
-//            root.append("teams", teams);
             int teamCount = 0;
             String json = "{\"teams\":[";
-            for (Team team : topTeams) {
+
+            for (Team team : selectedTeams) {
                 json += team.toJson();
-                if (teamCount < topTeams.size() - 1) {
+                if (teamCount == 250) {
+                    json += "]}";
+                    return json;
+                }
+                if (teamCount < selectedTeams.size() - 1) {
                     json += ",";
                 }
                 teamCount++;
@@ -414,104 +444,6 @@ public class Main {
             json += "]}";
 
             return json;
-        });
-
-        post("/upload", "multipart/form-data", (request, response) -> {
-
-            String location = "uploads";          // the directory location where files will be stored
-            long maxFileSize = 100000000;       // the maximum size allowed for uploaded files
-            long maxRequestSize = 100000000;    // the maximum size allowed for multipart/form-data requests
-            int fileSizeThreshold = 1024;       // the size threshold after which files will be written to disk
-
-            MultipartConfigElement multipartConfigElement = new MultipartConfigElement(
-                    location, maxFileSize, maxRequestSize, fileSizeThreshold);
-            request.raw().setAttribute("org.eclipse.jetty.multipartConfig",
-                    multipartConfigElement);
-
-            Collection<Part> parts = request.raw().getParts();
-
-            String[] fileList = new String[parts.size()];
-            int i = 0;
-            for (Part part : parts) {
-                System.out.println("Name: " + part.getName());
-                System.out.println("Size: " + part.getSize());
-                System.out.println("Filename: " + part.getSubmittedFileName());
-                fileList[i] = part.getSubmittedFileName();
-                i++;
-            }
-            System.out.println("After for...");
-//            try {
-//
-//            }
-//            catch (Exception e) {
-//
-//            }
-            Part uploadedFile = null;
-            String fName = "", fTitle = "";
-            try {
-                fName = request.raw().getPart("file").getSubmittedFileName();
-                fTitle = request.raw().getParameter("title");
-                fTitle = fTitle.length() > 0 ? fTitle : "temp";
-
-            }
-            catch( Exception e) {
-                fName = fileList[0];
-                fTitle = request.raw().getParameter("title");
-                fTitle = fTitle.length() > 0 ? fTitle : "temp";
-            }
-
-            System.out.println("File: " + fName);
-            System.out.println("Title: " + fTitle);
-            uploadedFile = request.raw().getPart("file");
-            System.out.println("1");
-            Path out = Paths.get("uploads/" + fTitle + "-" + fName);
-            System.out.println("2");
-
-            try (final InputStream in = uploadedFile.getInputStream()) {
-                Files.copy(in, out);
-                uploadedFile.delete();
-            }
-            catch (Exception e) {
-                System.out.println("Failed to copy uploaded file.");
-                System.out.println(e.getMessage());
-            }
-
-            multipartConfigElement = null;
-            parts = null;
-            uploadedFile = null;
-
-            File csvData = new File("uploads/" + fTitle + "-" + fName );
-            String plain = "";
-            try {
-                System.out.println("Team optimization started...");
-                long startTime = System.currentTimeMillis();
-
-
-                TeamOptimizer optimizer = new TeamOptimizer("uploads/" + fTitle + "-" + fName);
-                List<Team> topTeams = optimizer.FindBestTeams(50000, 7, 100);
-                long endTime   = System.currentTimeMillis();
-                long totalTime = endTime - startTime;
-                System.out.println("Team optimization finished in " + (totalTime * 0.001) + " seconds.");
-                String page = "<!DOCTYPE html>\n" +
-                        "<html><head><link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\" integrity=\"sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u\" crossorigin=\"anonymous\"><title>Best Teams</title></head>\n" +
-                        "<body>\n";
-                i = 0;
-                for (Team team : topTeams) {
-                    page += team.Show(i);
-//                    team.Show(i);
-                    i++;
-                }
-                page += "</body>\n" +
-                        "</html>";
-                return page;
-            }
-            catch (IOException e) {
-                System.out.println("Exception Found:");
-                System.out.println(e.getMessage());
-                System.out.println(e.getStackTrace());
-            }
-
-            return "OK";
         });
     }
 }
