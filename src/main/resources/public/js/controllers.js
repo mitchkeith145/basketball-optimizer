@@ -231,10 +231,10 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
                 }
                 $scope.bestTeams[i].total_salary = total;
             }
-//            $scope.distribution = {
-//                "player_names": [],
-//                "player_counts": []
-//            }
+            $scope.distribution = {
+                "player_names": [],
+                "player_counts": []
+            }
             for (var i = 0; i < response.data.selected_distribution.length; i++) {
                 var dist = response.data.selected_distribution[i];
                 $scope.distribution.player_names.push(dist.name);
