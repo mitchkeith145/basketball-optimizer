@@ -64,6 +64,10 @@ public class TeamSetSelector {
     }
 
 
+    public HashMap<String, Integer> getSelectedPlayerDistribution() {
+        return this.GetPlayerCounts(this.SelectedTeams);
+    }
+
     public ArrayList<Team> SelectTeams_V1(ArrayList<PlayerConstraint> playerConstraints) {
         this.PlayerConstraints.addAll(playerConstraints);
 

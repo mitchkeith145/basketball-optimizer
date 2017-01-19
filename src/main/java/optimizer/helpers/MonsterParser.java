@@ -160,11 +160,17 @@ public class MonsterParser {
             boolean recording = false;
             Map<String, String> nameIdMapper = new HashMap<>();
             for (CSVRecord csvRecord : parser.getRecords()) {
-                System.out.println("Record " + i + ":");
-                System.out.println(csvRecord.get(10) + "; " + csvRecord.get(11) + "; " + csvRecord.get(12) + "; " + csvRecord.get(13));
-                if ((csvRecord.get(11).length() > 0 && ! csvRecord.get(11).contains("Name")) &&
-                        (csvRecord.get(10).length() > 0 && ! csvRecord.get(10).contains("Name + ID"))) {
-                    nameIdMapper.put(csvRecord.get(11), csvRecord.get(10));
+                try {
+                    if ((csvRecord.get(11).length() > 0 && ! csvRecord.get(11).contains("Name")) &&
+                            (csvRecord.get(10).length() > 0 && ! csvRecord.get(10).contains("Name + ID"))) {
+                        System.out.println("Record " + i + ":");
+                        System.out.println(csvRecord.get(10) + "; " + csvRecord.get(11) + "; " + csvRecord.get(12) + "; " + csvRecord.get(13));
+                        nameIdMapper.put(getPlayerId(csvRecord.get(11), csvRecord.get(13)), csvRecord.get(10));
+                    }
+                }
+                catch (Exception e) {
+                    System.out.println("Exception");
+                    System.out.println(e);
                 }
                 i++;
             }
@@ -206,6 +212,16 @@ public class MonsterParser {
             System.out.println(e.getStackTrace());
             return null;
         }
+    }
+
+    private String getPlayerId(String name, String salary) {
+        String first = name.split(" ")[0];
+        String last = name.split(" ")[1];
+        first = first.toLowerCase();
+        first = first.substring(0, 1);
+        last = last.replaceAll("[^a-zA-Z]", "");
+        last = last.toLowerCase();
+        return first + last + salary;
     }
 
     public List<List<Player>> getLists() {

@@ -1,4 +1,4 @@
-angular.module('Optimizer.controllers', [ 'ngFileUpload' ]).
+angular.module('Optimizer.controllers', [ 'ngFileUpload', 'chart.js' ]).
 controller('appController', ['$scope', '$http', 'Upload', function ($scope, $http, Upload) {
     console.log("app Controller on load.")
     $scope.playerLists = [];
@@ -17,6 +17,12 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
     {name: "Small Forward", code: "SF"},{name: "Power Forward", code: "PF"},{name: "Forward", code: "F"},
     {name: "Center", code: "C"},{name: "Utility", code: "UTIL"}];
     $scope.canExport = false;
+    $scope.distribution = {
+        "player_names": [],
+        "player_counts": []
+    };
+    $scope.holdAreaTeams = [];
+    $scope.showDistribution = true;
     $scope.configurationMode = true;
     $scope.configureGeneration = true;
     $scope.submit = function() {
@@ -32,6 +38,7 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
         }).then(function (resp) {
             $scope.hideUpload = true;
             $scope.players = resp.data.players;
+            console.log($scope.players);
             $scope.getPositionLists();
         }, function (resp) {
             console.log('Error status: ' + resp.status);
@@ -213,8 +220,10 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
 
         $http.post('/generate', JSON.stringify(data), {}).then(function(response) {
             $scope.bestTeams = response.data.teams;
+
             $scope.generationInProgress = false;
             $scope.configureGeneration = false;
+
             for (var i = 0; i < $scope.bestTeams.length; i++) {
                 var total = 0;
                 for (var j = 0; j < $scope.bestTeams[i].roster.length; j++) {
@@ -222,6 +231,18 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
                 }
                 $scope.bestTeams[i].total_salary = total;
             }
+//            $scope.distribution = {
+//                "player_names": [],
+//                "player_counts": []
+//            }
+            for (var i = 0; i < response.data.selected_distribution.length; i++) {
+                var dist = response.data.selected_distribution[i];
+                $scope.distribution.player_names.push(dist.name);
+                $scope.distribution.player_counts.push(dist.count);
+            }
+            console.log("Dist:");
+            console.log($scope.distribution);
+
         }, function(response) {
             console.log("Error response.");
             console.log(response);
@@ -276,11 +297,13 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
             // finish swap
             console.log(exports[i]);
             for (var j = 0; j < exports[i].roster.length; j++) {
-                exports[i].csv += $scope.playerIdMap[exports[i].roster[j].name];
+                exports[i].csv += $scope.playerIdMap[exports[i].roster[j].id];
+                console.log(exports[i].roster[j].id);
+
                 if (count < exports[i].roster.length - 1) {
                     exports[i].csv += ",";
                 }
-                data[positions[count]] = $scope.playerIdMap[exports[i].roster[j].name]
+                data[positions[count]] = $scope.playerIdMap[exports[i].roster[j].id]
 
                 console.log(data);
                 count++;
@@ -294,18 +317,35 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
         console.log(exportData)
         console.log(exports);
         console.log($scope.exports);
-        if ($scope.exportData.length > 0) {
-            $scope.canExport = true;
-        }
-        else {
-            $scope.canExport = false;
-        }
+//        if ($scope.exportData.length > 0) {
+//            $scope.canExport = true;
+//        }
+//        else {
+//            $scope.canExport = false;
+//        }
+    }
+
+    //<button style="float: left;" ng-click="addToHoldArea()">Hold</button>
+    //<button style="float: left;" ng-click="clearHoldArea()">Clear</button>
+
+    $scope.addToHoldArea = function() {
+        $scope.holdAreaTeams = $scope.holdAreaTeams.concat($scope.exportData);
+        console.log("post concat: ");
+        console.log($scope.holdAreaTeams);
+        console.log($scope.exportData);
+        $scope.canExport = $scope.holdAreaTeams.length > 0;
+    }
+
+    $scope.clearHoldArea = function() {
+        $scope.canExport = false;
+        $scope.holdAreaTeams = [];
     }
 
     $scope.exportTeams = function() {
         if ($scope.exportForm.exportFile.$valid && $scope.exportFile) {
             $scope.getPlayerIdList($scope.exportFile, function(resp) {
                 $scope.playerIdMap = resp.data;
+                console.log($scope.playerIdMap);
                 $scope.gotMappings = true;
                 $scope.selectAllForExport();
             }, function(resp) {
@@ -313,6 +353,5 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
                 console.log(resp);
             });
         }
-
     }
 }]);

@@ -22,6 +22,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.io.IOException;
 
@@ -31,7 +32,7 @@ import org.json.*;
 public class Main {
     public static void main(String[] args) {
         Spark.staticFiles.location("/public");
-        Spark.port(8080);
+        Spark.port(8000);
 
         get("/doUpload", (req, res) -> {
             return "<!DOCTYPE html>\n" +
@@ -95,7 +96,7 @@ public class Main {
 
             try (final InputStream in = uploadedFile.getInputStream()) {
                 System.out.println("2-1");
-                Files.copy(in, out);
+                Files.copy(in, out, StandardCopyOption.REPLACE_EXISTING);
                 uploadedFile.delete();
                 System.out.println("2-2");
             }
@@ -152,7 +153,7 @@ public class Main {
         });
 
         post("/parseIdCsv", "multipart/form-data", (request, response) -> {
-            String location = "uploads";          // the directory location where files will be stored
+            String location = "uploads";        // the directory location where files will be stored
             long maxFileSize = 100000000;       // the maximum size allowed for uploaded files
             long maxRequestSize = 100000000;    // the maximum size allowed for multipart/form-data requests
             int fileSizeThreshold = 1024;       // the size threshold after which files will be written to disk
@@ -212,16 +213,6 @@ public class Main {
 
             MonsterParser parser = new MonsterParser();
             Map<String, String> list = parser.parseIdCsv("uploads/" + fTitle + "-" + fName);
-//            String data = "{\"players\":[";
-//            int playerCount = 0;
-//            for (Player p : completeList) {
-//                data += p.toJson();
-//                if (playerCount < completeList.size() - 1) {
-//                    data += ",";
-//                }
-//                playerCount++;
-//            }
-//            data += "]}";
             String data = "{";
             int keyCount = 0;
             for (String key : list.keySet()) {
@@ -278,20 +269,25 @@ public class Main {
                 fTitle = fTitle.length() > 0 ? fTitle : "temp";
             }
 
+            fTitle = fTitle.replaceAll("[^a-zA-Z\\\\.]", "");
+            fName = fName.replaceAll("[^a-zA-Z\\\\.]", "");
             System.out.println("File: " + fName);
             System.out.println("Title: " + fTitle);
             uploadedFile = request.raw().getPart("file");
             System.out.println("1");
+
             Path out = Paths.get("uploads/" + fTitle + "-" + fName);
             System.out.println("2");
 
             try (final InputStream in = uploadedFile.getInputStream()) {
-                Files.copy(in, out);
+                Files.copy(in, out, StandardCopyOption.REPLACE_EXISTING);
                 uploadedFile.delete();
             }
             catch (Exception e) {
                 System.out.println("Failed to copy uploaded file.");
                 System.out.println(e.getMessage());
+                e.printStackTrace();
+
             }
 
             multipartConfigElement = null;
@@ -300,6 +296,7 @@ public class Main {
 
 
             try {
+
                 MonsterParser parser = new MonsterParser("uploads/" + fTitle + "-" + fName);
                 List<Player> completeList = parser.parseCsv("uploads/" + fTitle + "-" + fName);
                 String data = "{\"players\":[";
@@ -405,9 +402,12 @@ public class Main {
             System.out.println("Team optimization started...");
             long startTime = System.currentTimeMillis();
             TeamOptimizer optimizer = new TeamOptimizer(playerLists);
-            Set<Team> topTeams = optimizer.FindBestTeams(50000, 6, 50000);
+            Set<Team> topTeams = optimizer.FindBestTeams(50000, 6, 100000);
             ArrayList<Team> topTeamList = Util.convertSetToList(topTeams);
 
+            if (batchSize <= 0) {
+                batchSize = 50;
+            }
             TeamSetSelector teamSetSelector = new TeamSetSelector(batchSize, topTeamList);
             ArrayList<Team> selectedTeams = teamSetSelector.SelectTeams(playerConstraints);
             if (universalMax > 0) {
@@ -433,13 +433,23 @@ public class Main {
             for (Team team : selectedTeams) {
                 json += team.toJson();
                 if (teamCount == 250) {
-                    json += "]}";
+                    json += "],";
                     return json;
                 }
                 if (teamCount < selectedTeams.size() - 1) {
                     json += ",";
                 }
                 teamCount++;
+            }
+            json += "],";
+            json += "\"selected_distribution\":[";
+            HashMap<String, Integer> distribution = teamSetSelector.getSelectedPlayerDistribution();
+            String[] keys = distribution.keySet().toArray(new String[distribution.size()]);
+            for (int i = 0; i < distribution.size(); i++) {
+                json +=  "{\"name\":\"" + keys[i] + "\",\"count\":" + distribution.get(keys[i]) + "}";
+                if (i < distribution.size() - 1) {
+                    json += ",";
+                }
             }
             json += "]}";
 

@@ -18,6 +18,9 @@ public class TeamComparator implements Comparator<Team> {
 
     @Override
     public int compare(Team team1, Team team2) {
+        // perhaps do this:
+        // if equal totalExpectedPoint values, check player string to see if equal. if not, different team.
+
         // uses the native double comparator on the teams' expected points.
         return ((Double)team2.TotalExpectedPoints()).compareTo(team1.TotalExpectedPoints());
     }

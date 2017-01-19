@@ -18,7 +18,7 @@ public class TeamOptimizer {
 
     private int TopTierTeamCount = 20;
     private int OptionsPerPosition = 0;
-    private int addCount = 0, secondaryAddCount = 0;
+    private int addCount = 0, recursiveCount = 0;
     private List<Team> TopTierTeams = new ArrayList<>();
 
     // instantiate a TreeSet (ie sorted set) to use a custom comparator, TeamComparator, for sorting
@@ -175,8 +175,7 @@ public class TeamOptimizer {
         return null;
     }
 
-    public Set<Team> FindBestTeams(int cashLimit, int optionsPerPosition, int topTierCount)
-    {
+    public Set<Team> FindBestTeams(int cashLimit, int optionsPerPosition, int topTierCount) {
         System.out.println("finding best...");
 
         List<Player> orderedPlayers = null;
@@ -185,9 +184,9 @@ public class TeamOptimizer {
 
         OptionsPerPosition = optionsPerPosition;
         int i = 0;
-        for (List<Player> playerList : PlayerLists)
-        {
+        for (List<Player> playerList : PlayerLists) {
             //list.sort(Comparator.comparing(a -> a.attr));
+
             if (i < PlayerLists.size() - 1) {
                 playerList.sort(Comparator.comparing(p -> p.ValueRatio));
                 Collections.reverse(playerList);
@@ -209,13 +208,14 @@ public class TeamOptimizer {
         ExploreTeamspace(0, cashLimit, new Team());
         System.out.println("ending recursion...");
         System.out.println("Tried adding " + addCount + " different teams.");
+        System.out.println("Recursive call made " + this.recursiveCount + " total times.");
+
         return this.sortedTopTierTeams;
     }
 
-    private void ExploreTeamspace(int level, int cashLimit, Team teamSoFar)
-    {
-        if (level == MaxLevel)
-        {
+    private void ExploreTeamspace(int level, int cashLimit, Team teamSoFar) {
+        this.recursiveCount++;
+        if (level == MaxLevel) {
 
             tryToAddToTopTierTeams(teamSoFar);
 //            TryAddToTopTierTeams(teamSoFar);
@@ -223,17 +223,73 @@ public class TeamOptimizer {
         }
 
         int options = this.OptionsPerPosition;
-        if (level == 4 || level == 3) options = OptionsPerPosition * 2;
+        if (level == 5 || level == 6) options = OptionsPerPosition * 2;
         if (level == 7) options = OptionsPerPosition * 4;
-
-        for (int i = 0; i < options; i++)
-        {
+        for (int i = 0; i < options; i++) {
             Player newPlayer = PlayerLists.get(level).get(i);
             if (newPlayer.Salary > cashLimit) continue;
             if (teamSoFar.HasPlayer(newPlayer)) continue;
+
+//            NEW CODE
+            int newLevel = level + 1;
+            int newCashLimit = cashLimit - newPlayer.Salary;
+            int playersStillNeeded = MaxLevel - newLevel;
+            int minSalaryNeeded = playersStillNeeded * 3000;   //make 3k variable
+            if (newCashLimit < minSalaryNeeded) {
+//                this.++;
+                continue;
+            }
+            else if (newLevel == MaxLevel) {
+                ExploreTeamspace(level + 1, cashLimit - newPlayer.Salary, ExtendTeam(teamSoFar, newPlayer));
+            }
+
             ExploreTeamspace(level + 1, cashLimit - newPlayer.Salary, ExtendTeam(teamSoFar, newPlayer));
         }
     }
+
+    /*
+
+    private void ExploreTeamspace(int level, int cashLimit, Team teamSoFar)
+        {
+            if (level == MaxLevel)
+            {
+                TryAddToTopTierTeams(teamSoFar);
+                return;
+            }
+
+            int options = this.OptionsPerPosition;
+            if (level == 2 || level == 5) options = OptionsPerPosition * 2;
+            if (level == 7) options = OptionsPerPosition * 4;
+
+            for (int i = 0; i < options; i++)
+            {
+                Player newPlayer = PlayerLists[level][i];
+                if (newPlayer.Salary > cashLimit) continue;
+                if (teamSoFar.HasPlayer(newPlayer)) continue;
+
+                //NEW CODE
+                int newLevel = level + 1;
+                int newCashLimit = cashLimit - newPlayer.Salary;
+                int playersStillNeeded = MaxLevel - newLevel;
+                int minSalaryNeeded = playersStillNeeded * 3000;   //make 3k variable
+                if (newCashLimit < minSalaryNeeded)
+                {
+                    this.ConstraintCount++;
+                    return;
+                }
+
+                ExploreTeamspace(newLevel, newCashLimit, ExtendTeam(teamSoFar, newPlayer));
+            }
+        }
+
+
+     */
+
+
+
+
+
+
     private Team ExtendTeam(Team teamSoFar, Player newPlayer)
     {
         Team extendedTeam = teamSoFar.Clone();

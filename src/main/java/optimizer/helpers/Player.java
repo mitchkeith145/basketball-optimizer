@@ -7,11 +7,16 @@ import org.json.*;
  * Created by mitch on 11/23/16.
  */
 public class Player {
-    public String Name, Position;
+    public String Name, Position, IdString;
     public Integer Salary, Rank, PredictedMinutes;
     public Double expectedPoints, Ratio, ValueRatio;
 
     public Player(CSVRecord record) { // instantiate Player from CSV data
+        /**
+         * CSVFormat.RFC4180.withHeader("", "Like", "Rank", "Price", "Ratio", "Value", "CompV1", "Name", "Inj",
+         "Team", "Pos", "g", "Ease", "Rest", "RestA", "m/g", "Opp", "3", "r", "a", "s", "b", "2d",
+         "3d", "to", "pV", "3V", "rV", "aV", "sV", "bV", "2dV", "3dV", "toV"));
+         */
         Name = record.get("Name");
         Position = record.get("Pos");
         String sal = record.get("Price");
@@ -22,6 +27,7 @@ public class Player {
         Ratio = Double.parseDouble(record.get("Ratio"));
         PredictedMinutes = Integer.parseInt(record.get("m/g"));
         ValueRatio = (Ratio * expectedPoints);
+        IdString = getNameId() + Salary;
         Show();
     }
 
@@ -35,6 +41,7 @@ public class Player {
         expectedPoints = Double.parseDouble(jsonObj.get("pts").toString());
         Rank = Integer.parseInt(jsonObj.get("rank").toString());
         ValueRatio = Double.parseDouble(jsonObj.get("value_ratio").toString());
+        IdString = jsonObj.get("id").toString();
         Show();
     }
 
@@ -57,12 +64,23 @@ public class Player {
         return "{\"name\":\"" + Name + "\"," + "\"position\":\"" + Position + "\"," +
                 "\"ratio\":" + String.format("%.5f", Ratio) + "," + "\"salary\":" + Salary + "," +
                 "\"pts\":" + String.format("%.5f", expectedPoints) + "," + "\"min\":" + PredictedMinutes + "," +
-                "\"value_ratio\":" + ValueRatio + "," + "\"rank\":" + Rank + "" + "}";
+                "\"value_ratio\":" + ValueRatio + "," + "\"rank\":" + Rank + "," +
+                "\"id\":\"" + IdString + "\" }";
     }
 
 
 
     public String toString() {
         return Name;
+    }
+
+    private String getNameId() {
+        String first = Name.split(" ")[0];
+        String last = Name.split(" ")[1];
+        first = first.toLowerCase();
+        first = first.substring(0, 1);
+        last = last.replaceAll("[^a-zA-Z]", "");
+        last = last.toLowerCase();
+        return first + last;
     }
 }

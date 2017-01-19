@@ -60,7 +60,7 @@ public class Team {
         for (Player p : Players) {
             sum += p.expectedPoints;
         }
-        sum = Util.round(sum, 3);
+        sum = Util.round(sum, 6);
         totalExpectedPoints = sum;
         return sum;
     }
