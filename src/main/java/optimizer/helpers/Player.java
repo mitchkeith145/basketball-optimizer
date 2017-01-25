@@ -21,7 +21,7 @@ public class Player {
         Position = record.get("Pos");
         String sal = record.get("Price");
         String salary = String.join("", sal.split("\\$")[1].split(","));
-        Salary = Integer.parseInt(salary);
+        Salary = Integer.parseInt(salary.split("\\.")[0]);
         expectedPoints = Double.parseDouble(record.get("Value"));
         Rank = Integer.parseInt(record.get("Rank"));
         Ratio = Double.parseDouble(record.get("Ratio"));
