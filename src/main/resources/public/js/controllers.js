@@ -240,8 +240,8 @@ controller('appController', ['$scope', '$http', 'Upload', function ($scope, $htt
                 $scope.distribution.player_names.push(dist.name);
                 $scope.distribution.player_counts.push(dist.count);
             }
-            console.log("Dist:");
-            console.log($scope.distribution);
+
+            $scope.selectAllForExport();
 
         }, function(response) {
             console.log("Error response.");
